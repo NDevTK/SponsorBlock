@@ -11,28 +11,34 @@
   <b>Download:</b>
   <a href="https://chrome.google.com/webstore/detail/mnjggcdmjocbbbhaepdhchncahnbgone">Chrome/Chromium</a> |
   <a href="https://addons.mozilla.org/addon/sponsorblock/?src=external-github">Firefox</a> |
+  <a href="https://github.com/ajayyy/SponsorBlock/wiki/Android">Android</a> |
+  <a href="https://github.com/ajayyy/SponsorBlock/wiki/Edge">Edge</a> |
   <a href="https://sponsor.ajay.app">Website</a> |
   <a href="https://sponsor.ajay.app/stats">Stats</a>
 </p>
 
 <p align="center">
-  <b>Unofficial Ports:</b>
-  <a href="https://github.com/ajayyy/SponsorBlock/wiki/Unofficial-Ports#mpv-media-player">MPV</a>
+  <b>3rd-Party Ports:</b>
+  <a href="https://github.com/ajayyy/SponsorBlock/wiki/3rd-Party-Ports#mpv-media-player">MPV</a> |
+  <a href="https://github.com/ajayyy/SponsorBlock/wiki/3rd-Party-Ports#kodi">Kodi</a> |
+  <a href="https://github.com/ajayyy/SponsorBlock/wiki/3rd-Party-Ports#Safari-macos">Safari for MacOS</a> |
+  <a href="https://github.com/ajayyy/SponsorBlock/wiki/3rd-Party-Ports#Chromecast">Chromecast</a> |
+  <a href="https://github.com/ajayyy/SponsorBlock/wiki/3rd-Party-Ports#ios">iOS</a>
 </p>
 
 <p align="center">
     <a href="https://addons.mozilla.org/addon/sponsorblock/?src=external-github"><img src="https://img.shields.io/amo/users/sponsorblock?label=Firefox%20Users" alt="Badge"></img></a>
     <a href="https://chrome.google.com/webstore/detail/mnjggcdmjocbbbhaepdhchncahnbgone"><img src="https://img.shields.io/chrome-web-store/users/mnjggcdmjocbbbhaepdhchncahnbgone?label=Chrome%20Users" alt="Badge"></img></a>
-    <a href="https://sponsor.ajay.app/stats"><img src="https://img.shields.io/badge/dynamic/json?label=Sponsors%20Submitted&query=totalSubmissions&suffix=%20sponsors&url=http%3A%2F%2Fsponsor.ajay.app%2Fapi%2FgetTotalStats&color=darkred" alt="Badge"></img></a>
-    <a href="https://sponsor.ajay.app/stats"><img src="https://img.shields.io/badge/dynamic/json?label=Contributing%20Users&query=userCount&url=http%3A%2F%2Fsponsor.ajay.app%2Fapi%2FgetTotalStats&color=darkblue" alt="Badge"></img></a>
+    <a href="https://sponsor.ajay.app/stats"><img src="https://img.shields.io/badge/dynamic/json?label=Submissions&query=totalSubmissions&suffix=%20segments&url=http%3A%2F%2Fsponsor.ajay.app%2Fapi%2FgetTotalStats&color=darkred" alt="Badge"></img></a>
+    <a href="https://sponsor.ajay.app/stats"><img src="https://img.shields.io/badge/dynamic/json?label=Active%20Users&query=apiUsers&url=http%3A%2F%2Fsponsor.ajay.app%2Fapi%2FgetTotalStats&color=darkblue" alt="Badge"></img></a>
     <a href="https://sponsor.ajay.app/stats"><img src="https://img.shields.io/badge/dynamic/json?label=Time%20Saved%20From%20Skips&query=daysSaved&url=http%3A%2F%2Fsponsor.ajay.app%2Fapi%2FgetDaysSavedFormatted&color=darkgreen&suffix=%20days" alt="Badge"></img></a>
 </p>
 
 
 
-SponsorBlock is an extension that will skip over sponsored segments of YouTube videos. SponsorBlock is a crowdsourced browser extension that lets anyone submit the start and end times of sponsored segments of YouTube videos. Once one person submits this information, everyone else with this extension will skip right over the sponsored segment.
+SponsorBlock is an open-source crowdsourced browser extension to skip sponsor segments in YouTube videos. Users submit when a sponsor happens from the extension, and the extension automatically skips sponsors it knows about. It also supports skipping other categories, such as intros, outros and reminders to subscribe.
 
-Also support Invidio.us.
+It also supports Invidio.us.
 
 **Translate:** [![Crowdin](https://badges.crowdin.net/sponsorblock/localized.svg)](https://crowdin.com/project/sponsorblock)
 
@@ -44,13 +50,9 @@ See the [Wiki](https://github.com/ajayyy/SponsorBlock/wiki) for important links.
 
 The backend server code is available here: https://github.com/ajayyy/SponsorBlockServer
 
-It is a simple SQLite database that will hold all the timing data.
-
-To make sure that this project doesn't die, I have made the database publicly downloadable at https://sponsor.ajay.app/database.db ([License](https://github.com/ajayyy/SponsorBlock/wiki/Database-and-API-License)). If you are planning on using the database in another project, please read the [API Docs](https://github.com/ajayyy/SponsorBlock/wiki/API-Docs) page for more information.
+To make sure that this project doesn't die, I have made the database publicly downloadable at https://sponsor.ajay.app/database ([License](https://github.com/ajayyy/SponsorBlock/wiki/Database-and-API-License)). If you are planning on using the database in another project, please read the [API Docs](https://github.com/ajayyy/SponsorBlock/wiki/API-Docs) page for more information.
 
 The dataset and API are now being used in some [ports](https://github.com/ajayyy/SponsorBlock/wiki/Unofficial-Ports) as well as a [neural network](https://github.com/andrewzlee/NeuralBlock).
-
-A [previous project](https://github.com/Sponsoff/sponsorship_remover) attempted to create a neural network to predict when sponsored segments happen. That project is sadly abandoned now, so I have decided to attempt to revive this idea starting from a crowd-sourced system instead.
 
 # API
 
@@ -70,14 +72,32 @@ The result is in `dist`. This can be loaded as an unpacked extension
 
 ## Developing with a clean profile
 
-Run `npm run dev` to run the extension using a clean browser profile with hot reloading. Use `npm run dev:firefox` for Firefox. This uses [`web-ext run`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#commands).
+Run `npm run dev` to run the extension using a clean browser profile with hot reloading. Use `npm run dev:firefox` for Firefox. This uses [`web-ext run`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#commands).  
+Known chromium bug: Extension is not loaded properly on first start. Visit `chrome://extensions/` and reload the extension.
+
+### Attribution Generation
+
+If you contribute and add a dependency, update the attribution file using the following steps:
+
+Make sure the attribution generator is installed: `npm i -g oss-attribution-generator`
+
+```bash
+generate-attribution
+mv ./oss-attribution/attribution.txt ./public/oss-attribution/attribution.txt
+```
 
 # Credit
 
 The awesome [Invidious API](https://github.com/omarroth/invidious/wiki/API) was previously used.
 
-Originally forked from [YTSponsorSkip](https://github.com/OfficialNoob/YTSponsorSkip), but zero code remains.
+Originally forked from [YTSponsorSkip](https://github.com/NDevTK/YTSponsorSkip), but very little code remains.
 
-Some icons made by <a href="https://www.flaticon.com/authors/gregor-cresnar" title="Gregor Cresnar">Gregor Cresnar</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> and are licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
+Icons made by:
+* <a href="https://www.flaticon.com/authors/gregor-cresnar" title="Gregor Cresnar">Gregor Cresnar</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> and are licensed by <a href="https://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
+* <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> and are licensed by <a href="https://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
+* <a href="https://iconmonstr.com/about/#creator">Alexander Kahlkopf</a> from <a href="https://iconmonstr.com/">iconmonstr.com</a> and are licensed by <a href="https://iconmonstr.com/license/">iconmonstr License</a>
 
-Some icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> are licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
+
+### License
+
+This project is licensed under GNU GPL v3 or any later version

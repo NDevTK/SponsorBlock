@@ -1,1 +1,227 @@
-{}
+{
+    "fullName": {
+        "message": "SponserBlock for YouTube - 動画のスポンサーセクションを自動でスキップする",
+        "description": "Name of the extension."
+    },
+    "channelWhitelisted": {
+        "message": "チャンネルをホワイトリストに登録しました!"
+    },
+    "Segment": {
+        "message": "セグメント"
+    },
+    "Segments": {
+        "message": "セグメント"
+    },
+    "reportButtonTitle": {
+        "message": "報告"
+    },
+    "Dismiss": {
+        "message": "無視"
+    },
+    "Loading": {
+        "message": "読み込み中..."
+    },
+    "Hide": {
+        "message": "非表示"
+    },
+    "unskip": {
+        "message": "スキップしない"
+    },
+    "paused": {
+        "message": "一時停止"
+    },
+    "success": {
+        "message": "成功しました!"
+    },
+    "voted": {
+        "message": "投票しました!"
+    },
+    "openPopup": {
+        "message": "SponsorBlock のポップアップを開く"
+    },
+    "closePopup": {
+        "message": "ポップアップを閉じる"
+    },
+    "whitelistChannel": {
+        "message": "ホワイトリストのチャンネル"
+    },
+    "removeFromWhitelist": {
+        "message": "ホワイトリストからチャンネルを削除"
+    },
+    "viewLeaderboard": {
+        "message": "リーダーボード"
+    },
+    "recordTimesDescription": {
+        "message": "送信"
+    },
+    "Username": {
+        "message": "ユーザー名"
+    },
+    "setUsername": {
+        "message": "ユーザー名を設定"
+    },
+    "hideThis": {
+        "message": "非表示にする"
+    },
+    "Options": {
+        "message": "オプション"
+    },
+    "showButtons": {
+        "message": "YouTube プレイヤーにボタンを表示"
+    },
+    "hideButtons": {
+        "message": "YouTube プレイヤーにボタンを表示しない"
+    },
+    "hideDeleteButton": {
+        "message": "YouTube プレイヤーから削除ボタンを隠す"
+    },
+    "showDeleteButton": {
+        "message": "YouTube プレイヤーから削除ボタンを表示する"
+    },
+    "website": {
+        "message": "ウェブサイト",
+        "description": "Used on Firefox Store Page"
+    },
+    "sourceCode": {
+        "message": "ソースコード",
+        "description": "Used on Firefox Store Page"
+    },
+    "errorCode": {
+        "message": "エラーコード: "
+    },
+    "skip": {
+        "message": "スキップ"
+    },
+    "skip_category": {
+        "message": "{0} をスキップしますか?"
+    },
+    "skipped": {
+        "message": "スキップしました"
+    },
+    "disableAutoSkip": {
+        "message": "自動スキップを無効にする"
+    },
+    "enableAutoSkip": {
+        "message": "自動スキップを有効にする"
+    },
+    "audioNotification": {
+        "message": "オーディオ通知をスキップ"
+    },
+    "youHaveSkipped": {
+        "message": "スキップしました "
+    },
+    "minLower": {
+        "message": "分"
+    },
+    "minsLower": {
+        "message": "分"
+    },
+    "hourLower": {
+        "message": "時間"
+    },
+    "hoursLower": {
+        "message": "時間"
+    },
+    "createdBy": {
+        "message": "作成者"
+    },
+    "autoSkip": {
+        "message": "自動スキップ"
+    },
+    "add": {
+        "message": "追加"
+    },
+    "customServerAddress": {
+        "message": "SponsorBlock サーバーアドレス"
+    },
+    "save": {
+        "message": "保存"
+    },
+    "reset": {
+        "message": "リセット"
+    },
+    "mobileUpdateInfo": {
+        "message": "m.youtube.com は現在サポートされています"
+    },
+    "submit": {
+        "message": "送信"
+    },
+    "cancel": {
+        "message": "キャンセル"
+    },
+    "delete": {
+        "message": "削除"
+    },
+    "preview": {
+        "message": "プレビュー"
+    },
+    "edit": {
+        "message": "編集"
+    },
+    "category_sponsor": {
+        "message": "スポンサー"
+    },
+    "category_intro": {
+        "message": "インターミッション / イントロアニメーション"
+    },
+    "category_intro_short": {
+        "message": "インターミッション"
+    },
+    "category_outro": {
+        "message": "エンドカード/クレジット"
+    },
+    "category_selfpromo": {
+        "message": "無報酬 / セルフプロモーション"
+    },
+    "disable": {
+        "message": "無効"
+    },
+    "manualSkip": {
+        "message": "手動スキップ"
+    },
+    "showOverlay": {
+        "message": "シークバーに表示"
+    },
+    "previewColor": {
+        "message": "プレビューカラー",
+        "description": "Referring to submissions that have not been sent to the server yet."
+    },
+    "seekBarColor": {
+        "message": "シークバーのカラー"
+    },
+    "category": {
+        "message": "カテゴリ"
+    },
+    "skipOption": {
+        "message": "スキップ オプション",
+        "description": "Used on the options page to describe the ways to skip the segment (auto skip, manual, etc.)"
+    },
+    "enableTestingServer": {
+        "message": "ベータテストサーバーを有効にする"
+    },
+    "bracketNow": {
+        "message": "(今)"
+    },
+    "chooseACategory": {
+        "message": "カテゴリーを選択"
+    },
+    "channelDataNotFound": {
+        "message": "まだチャンネル ID が読み込まれてません。"
+    },
+    "incorrectCategory": {
+        "message": "カテゴリが違います"
+    },
+    "guidelines": {
+        "message": "ガイドライン"
+    },
+    "readTheGuidelines": {
+        "message": "ガイドラインを読んでください!!",
+        "description": "Show the first time they submit or if they are \"high risk\""
+    },
+    "categoryUpdate1": {
+        "message": "カテゴリはこちらです!"
+    },
+    "help": {
+        "message": "ヘルプ"
+    }
+}

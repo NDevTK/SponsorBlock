@@ -3,7 +3,7 @@ import * as React from "react";
 export interface NoticeTextSelectionProps {
     text: string,
     idSuffix: string,
-    onClick?: (event: React.MouseEvent) => any
+    onClick?: (event: React.MouseEvent) => unknown
 }
 
 export interface NoticeTextSelectionState {
@@ -16,8 +16,8 @@ class NoticeTextSelectionComponent extends React.Component<NoticeTextSelectionPr
         super(props);
     }
 
-    render() {
-        let style: React.CSSProperties = {};
+    render(): React.ReactElement {
+        const style: React.CSSProperties = {};
         if (this.props.onClick) {
             style.cursor = "pointer";
             style.textDecoration = "underline"

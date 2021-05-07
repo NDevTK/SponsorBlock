@@ -1,21 +1,23 @@
 import * as CompileConfig from "../config.json";
-import { CategorySelection, CategorySkipOption, PreviewBarOption } from "./types";
+import { CategorySelection, CategorySkipOption, PreviewBarOption, SponsorTime, StorageChangesObject, UnEncodedSegmentTimes as UnencodedSegmentTimes } from "./types";
 
 import Utils from "./utils";
 const utils = new Utils();
 
 interface SBConfig {
     userID: string,
-    sponsorTimes: SBMap<string, any>,
+    segmentTimes: SBMap<string, SponsorTime[]>,
+    defaultCategory: string,
     whitelistedChannels: string[],
     forceChannelCheck: boolean,
+    skipKeybind: string,
     startSponsorKeybind: string,
     submitKeybind: string,
     minutesSaved: number,
     skipCount: number,
     sponsorTimesContributed: number,
     submissionCountSinceCategories: number, // New count used to show the "Read The Guidelines!!" message
-    unsubmittedWarning: boolean,
+    showTimeWithSkips: boolean,
     disableSkipping: boolean,
     trackViewCount: boolean,
     dontShowNotice: boolean,
@@ -32,14 +34,15 @@ interface SBConfig {
     audioNotificationOnSkip,
     checkForUnlistedVideos: boolean,
     testingServer: boolean,
-
-    categoryUpdateShowCount: number,
+    hashPrefix: boolean,
+    refetchWhenNotFound: boolean,
 
     // What categories should be skipped
     categorySelections: CategorySelection[],
 
     // Preview bar
     barTypes: {
+        "preview-chooseACategory": PreviewBarOption,
         "sponsor": PreviewBarOption,
         "preview-sponsor": PreviewBarOption,
         "intro": PreviewBarOption,
@@ -51,18 +54,18 @@ interface SBConfig {
         "selfpromo": PreviewBarOption,
         "preview-selfpromo": PreviewBarOption,
         "music_offtopic": PreviewBarOption,
-        "preview-music_offtopic": PreviewBarOption
+        "preview-music_offtopic": PreviewBarOption,
     }
 }
 
-interface SBObject {
-    configListeners: Array<Function>;
+export interface SBObject {
+    configListeners: Array<(changes: StorageChangesObject) => unknown>;
     defaults: SBConfig;
     localConfig: SBConfig;
     config: SBConfig;
 
     // Functions
-    encodeStoredItem<T>(data: T): T | Array<any>;
+    encodeStoredItem<T>(data: T): T | UnencodedSegmentTimes;
     convertJSON(): void;
 }
 
@@ -84,24 +87,39 @@ class SBMap<T, U> extends Map {
         }
     }
 
-    set(key, value) {
-        const result = super.set(key, value);
+    get(key): U {
+        return super.get(key);
+    }
 
+    rawSet(key, value) {
+        return super.set(key, value);
+    }
+
+    update() {
         // Store updated SBMap locally
         chrome.storage.sync.set({
             [this.id]: encodeStoredItem(this)
         });
+    }
 
+    set(key: T, value: U) {
+        const result = super.set(key, value);
+
+        this.update();
         return result;
     }
 	
     delete(key) {
         const result = super.delete(key);
 
-	    // Store updated SBMap locally
-	    chrome.storage.sync.set({
-            [this.id]: encodeStoredItem(this)
-        });
+        // Make sure there are no empty elements
+        for (const entry of this.entries()) {
+            if (entry[1].length === 0) {
+                super.delete(entry[0]);
+            }
+        }
+
+        this.update();
 
         return result;
     }
@@ -109,31 +127,30 @@ class SBMap<T, U> extends Map {
     clear() {
         const result = super.clear();
 
-	    chrome.storage.sync.set({
-            [this.id]: encodeStoredItem(this)
-        });
-
+        this.update();
         return result;
     }
 }
 
-var Config: SBObject = {
+const Config: SBObject = {
     /**
      * Callback function when an option is updated
      */
     configListeners: [],
     defaults: {
         userID: null,
-        sponsorTimes: new SBMap("sponsorTimes"),
+        segmentTimes: new SBMap("segmentTimes"),
+        defaultCategory: "chooseACategory",
         whitelistedChannels: [],
         forceChannelCheck: false,
+        skipKeybind: "Enter",
         startSponsorKeybind: ";",
         submitKeybind: "'",
         minutesSaved: 0,
         skipCount: 0,
         sponsorTimesContributed: 0,
         submissionCountSinceCategories: 0,
-        unsubmittedWarning: true,
+        showTimeWithSkips: true,
         disableSkipping: false,
         trackViewCount: true,
         dontShowNotice: false,
@@ -143,15 +160,15 @@ var Config: SBObject = {
         hideUploadButtonPlayerControls: false,
         hideDiscordLaunches: 0,
         hideDiscordLink: false,
-        invidiousInstances: ["invidio.us", "invidious.snopyta.org"],
+        invidiousInstances: ["invidious.snopyta.org"],
         supportInvidious: false,
         serverAddress: CompileConfig.serverAddress,
         minDuration: 0,
         audioNotificationOnSkip: false,
         checkForUnlistedVideos: false,
         testingServer: false,
-
-        categoryUpdateShowCount: 0,
+        hashPrefix: true,
+        refetchWhenNotFound: true,
 
         categorySelections: [{
             name: "sponsor",
@@ -160,6 +177,10 @@ var Config: SBObject = {
 
         // Preview bar
         barTypes: {
+            "preview-chooseACategory": {
+                color: "#ffffff",
+                opacity: "0.7"
+            },
             "sponsor": {
                 color: "#00d400",
                 opacity: "0.7"
@@ -226,10 +247,10 @@ var Config: SBObject = {
  * 
  * @param data 
  */
-function encodeStoredItem<T>(data: T): T | Array<any>  {
+function encodeStoredItem<T>(data: T): T | UnencodedSegmentTimes  {
     // if data is SBMap convert to json for storing
     if(!(data instanceof SBMap)) return data;
-    return Array.from(data.entries());
+    return Array.from(data.entries()).filter((element) => element[1].length > 0); // Remove empty entries
 }
 
 /**
@@ -238,24 +259,13 @@ function encodeStoredItem<T>(data: T): T | Array<any>  {
  * 
  * @param {*} data 
  */
-function decodeStoredItem<T>(id: string, data: T): T | SBMap<string, any> {
+function decodeStoredItem<T>(id: string, data: T): T | SBMap<string, SponsorTime[]> {
     if (!Config.defaults[id]) return data;
 
     if (Config.defaults[id] instanceof SBMap) {
         try {
-            let jsonData: any = data;
-
-            // Check if data is stored in the old format for SBMap (a JSON string)
-            if (typeof data === "string") {
-                try {	
-                    jsonData = JSON.parse(data);	   
-                } catch(e) {
-                    // Continue normally (out of this if statement)
-                }
-            }
-
-            if (!Array.isArray(jsonData)) return data;
-            return new SBMap(id, jsonData);
+            if (!Array.isArray(data)) return data;
+            return new SBMap(id, data as UnencodedSegmentTimes);
         } catch(e) {
             console.error("Failed to parse SBMap: " + id);
         }
@@ -265,8 +275,8 @@ function decodeStoredItem<T>(id: string, data: T): T | SBMap<string, any> {
     return data;
 }
 
-function configProxy(): any {
-    chrome.storage.onChanged.addListener((changes, namespace) => {
+function configProxy(): SBConfig {
+    chrome.storage.onChanged.addListener((changes: {[key: string]: chrome.storage.StorageChange}) => {
         for (const key in changes) {
             Config.localConfig[key] = decodeStoredItem(key, changes[key].newValue);
         }
@@ -276,8 +286,8 @@ function configProxy(): any {
         }
     });
 	
-    var handler: ProxyHandler<any> = {
-        set(obj, prop, value) {
+    const handler: ProxyHandler<SBConfig> = {
+        set<K extends keyof SBConfig>(obj: SBConfig, prop: K, value: SBConfig[K]) {
             Config.localConfig[prop] = value;
 
             chrome.storage.sync.set({
@@ -287,13 +297,13 @@ function configProxy(): any {
             return true;
         },
 
-        get(obj, prop): any {
-            let data = Config.localConfig[prop];
+        get<K extends keyof SBConfig>(obj: SBConfig, prop: K): SBConfig[K] {
+            const data = Config.localConfig[prop];
 
             return obj[prop] || data;
         },
 	
-        deleteProperty(obj, prop) {
+        deleteProperty(obj: SBConfig, prop: keyof SBConfig) {
             chrome.storage.sync.remove(<string> prop);
             
             return true;
@@ -301,11 +311,11 @@ function configProxy(): any {
 
     };
 
-    return new Proxy({handler}, handler);
+    return new Proxy<SBConfig>({handler} as unknown as SBConfig, handler);
 }
 
-function fetchConfig() { 
-    return new Promise((resolve, reject) => {
+function fetchConfig(): Promise<void> { 
+    return new Promise((resolve) => {
         chrome.storage.sync.get(null, function(items) {
             Config.localConfig = <SBConfig> <unknown> items;  // Data is ready
             resolve();
@@ -313,9 +323,9 @@ function fetchConfig() {
     });
 }
 
-async function migrateOldFormats() {
-    if (Config.config["disableAutoSkip"]) {
-        for (const selection of Config.config.categorySelections) {
+function migrateOldFormats(config: SBConfig) {
+    if (config["disableAutoSkip"]) {
+        for (const selection of config.categorySelections) {
             if (selection.name === "sponsor") {
                 selection.option = CategorySkipOption.ManualSkip;
 
@@ -325,53 +335,97 @@ async function migrateOldFormats() {
     }
 
     // Auto vote removal
-    if (Config.config["autoUpvote"]) {
+    if (config["autoUpvote"]) {
         chrome.storage.sync.remove("autoUpvote");
     }
-
     // mobileUpdateShowCount removal
-    if (Config.config["mobileUpdateShowCount"] !== undefined) {
+    if (config["mobileUpdateShowCount"] !== undefined) {
         chrome.storage.sync.remove("mobileUpdateShowCount");
+    }
+    // categoryUpdateShowCount removal
+    if (config["categoryUpdateShowCount"] !== undefined) {
+        chrome.storage.sync.remove("categoryUpdateShowCount");
     }
 
     // Channel URLS
-    if (Config.config.whitelistedChannels.length > 0 && 
-            (Config.config.whitelistedChannels[0] == null || Config.config.whitelistedChannels[0].includes("/"))) {
-        let newChannelList: string[] = [];
-        for (const item of Config.config.whitelistedChannels) {
-            if (item != null) {
-                if (item.includes("/channel/")) {
-                    newChannelList.push(item.split("/")[2]);
-                } else if (item.includes("/user/") &&  utils.isContentScript()) {
-                    // Replace channel URL with channelID
-                    let response = await utils.asyncRequestToCustomServer("GET", "https://sponsor.ajay.app/invidious/api/v1/channels/" + item.split("/")[2] + "?fields=authorId");
-                
-                    if (response.ok) {
-                        newChannelList.push((JSON.parse(response.responseText)).authorId);
-                    } else {
-                        // Add it at the beginning so it gets converted later
+    if (config.whitelistedChannels.length > 0 && 
+            (config.whitelistedChannels[0] == null || config.whitelistedChannels[0].includes("/"))) {
+        const channelURLFixer = async() => {
+            const newChannelList: string[] = [];
+            for (const item of config.whitelistedChannels) {
+                if (item != null) {
+                    if (item.includes("/channel/")) {
+                        newChannelList.push(item.split("/")[2]);
+                    } else if (item.includes("/user/") &&  utils.isContentScript()) {
+
+                        
+                        // Replace channel URL with channelID
+                        const response = await utils.asyncRequestToCustomServer("GET", "https://sponsor.ajay.app/invidious/api/v1/channels/" + item.split("/")[2] + "?fields=authorId");
+                    
+                        if (response.ok) {
+                            newChannelList.push((JSON.parse(response.responseText)).authorId);
+                        } else {
+                            // Add it at the beginning so it gets converted later
+                            newChannelList.unshift(item);
+                        }
+                    } else if (item.includes("/user/")) {
+                        // Add it at the beginning so it gets converted later (The API can only be called in the content script due to CORS issues)
                         newChannelList.unshift(item);
+                    } else {
+                        newChannelList.push(item);
                     }
-                } else if (item.includes("/user/")) {
-                    // Add it at the beginning so it gets converted later (The API can only be called in the content script due to CORS issues)
-                    newChannelList.unshift(item);
-                } else {
-                    newChannelList.push(item);
                 }
             }
+
+            config.whitelistedChannels = newChannelList;
         }
 
-        Config.config.whitelistedChannels = newChannelList;
+        channelURLFixer();
     }
 
     // Check if off-topic category needs to be removed
-    for (let i = 0; i < Config.config.categorySelections.length; i++) {
-        if (Config.config.categorySelections[i].name === "offtopic") {
-            Config.config.categorySelections.splice(i, 1);
+    for (let i = 0; i < config.categorySelections.length; i++) {
+        if (config.categorySelections[i].name === "offtopic") {
+            config.categorySelections.splice(i, 1);
             // Call set listener
-            Config.config.categorySelections = Config.config.categorySelections;
+            config.categorySelections = config.categorySelections;
             break;
         }
+    }
+
+    // Migrate old "sponsorTimes"
+    if (config["sponsorTimes"]) {
+        let jsonData: unknown = config["sponsorTimes"];
+
+        // Check if data is stored in the old format for SBMap (a JSON string)
+        if (typeof jsonData === "string") {
+            try {	
+                jsonData = JSON.parse(jsonData);	   
+            } catch(e) {
+                // Continue normally (out of this if statement)
+            }
+        }
+
+        // Otherwise junk data
+        if (Array.isArray(jsonData)) {
+            const oldMap = new Map(jsonData);
+            oldMap.forEach((sponsorTimes: number[][], key) => {
+                const segmentTimes: SponsorTime[] = [];
+                for (const segment of sponsorTimes) {
+                    segmentTimes.push({
+                        segment: segment,
+                        category: "sponsor",
+                        UUID: null
+                    });
+                }
+
+                config.segmentTimes.rawSet(key, segmentTimes);
+            });
+
+            config.segmentTimes.update();
+        }
+
+        chrome.storage.sync.remove("sponsorTimes");
     }
 }
 
@@ -379,14 +433,11 @@ async function setupConfig() {
     await fetchConfig();
     addDefaults();
     convertJSON();
-    Config.config = configProxy();
-    migrateOldFormats();
-}
+    const config = configProxy();
+    migrateOldFormats(config);
 
-// Reset config
-function resetConfig() {
-    Config.config = Config.defaults;
-};
+    Config.config = config;
+}
 
 function convertJSON(): void {
     Object.keys(Config.localConfig).forEach(key => {
@@ -397,11 +448,17 @@ function convertJSON(): void {
 // Add defaults
 function addDefaults() {
     for (const key in Config.defaults) {
-        if(!Config.localConfig.hasOwnProperty(key)) {
-	        Config.localConfig[key] = Config.defaults[key];
+        if(!Object.prototype.hasOwnProperty.call(Config.localConfig, key)) {
+            Config.localConfig[key] = Config.defaults[key];
+        } else if (key === "barTypes") {
+            for (const key2 in Config.defaults[key]) {
+                if(!Object.prototype.hasOwnProperty.call(Config.localConfig[key], key2)) {
+                    Config.localConfig[key][key2] = Config.defaults[key][key2];
+                }
+            }
         }
     }
-};
+}
 
 // Sync config
 setupConfig();

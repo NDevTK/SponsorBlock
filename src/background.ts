@@ -1,17 +1,20 @@
 import * as CompileConfig from "../config.json";
 
 import Config from "./config";
+import { Registration } from "./types";
+
 // Make the config public for debugging purposes
-(<any> window).SB = Config;
+
+window.SB = Config;
 
 import Utils from "./utils";
-var utils = new Utils({
+const utils = new Utils({
     registerFirefoxContentScript,
     unregisterFirefoxContentScript
 });
 
 // Used only on Firefox, which does not support non persistent background pages.
-var contentScriptRegistrations = {};
+const contentScriptRegistrations = {};
 
 // Register content script if needed
 if (utils.isFirefox()) {
@@ -31,6 +34,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, callback) {
         case "openConfig":
             chrome.runtime.openOptionsPage();
             return;
+        case "openHelp":
+            chrome.tabs.create({url: chrome.runtime.getURL('help/index_en.html')});
+            return;
         case "sendRequest":
             sendRequestToCustomServer(request.type, request.url, request.data).then(async (response) => {
                 callback({
@@ -41,35 +47,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, callback) {
             });
         
             return true;
-        case "addSponsorTime":
-            addSponsorTime(request.time, request.videoID, callback);
-        
-            //this allows the callback to be called later
-            return true;
-        
-        case "getSponsorTimes":
-            getSponsorTimes(request.videoID, function(sponsorTimes) {
-                callback({
-                    sponsorTimes
-                });
-            });
-        
-            //this allows the callback to be called later
-            return true;
         case "submitVote":
             submitVote(request.type, request.UUID, request.category).then(callback);
         
             //this allows the callback to be called later
             return true;
-        case "alertPrevious":
-            if (Config.config.unsubmittedWarning) {
-                chrome.notifications.create("stillThere" + Math.random(), {
-                    type: "basic",
-                    title: chrome.i18n.getMessage("wantToSubmit") + " " + request.previousVideoID + "?",
-                    message: chrome.i18n.getMessage("leftTimes"),
-                    iconUrl: "./icons/LogoSponsorBlocker256px.png"
-                });
-            }
         case "registerContentScript": 
             registerFirefoxContentScript(request);
             return false;
@@ -80,7 +62,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, callback) {
 });
 
 //add help page on install
-chrome.runtime.onInstalled.addListener(function (object) {
+chrome.runtime.onInstalled.addListener(function () {
     // This let's the config sync to run fully before checking.
     // This is required on Firefox
     setTimeout(function() {
@@ -105,8 +87,8 @@ chrome.runtime.onInstalled.addListener(function (object) {
  * 
  * @param {JSON} options 
  */
-function registerFirefoxContentScript(options) {
-    let oldRegistration = contentScriptRegistrations[options.id];
+function registerFirefoxContentScript(options: Registration) {
+    const oldRegistration = contentScriptRegistrations[options.id];
     if (oldRegistration) oldRegistration.unregister();
 
     browser.contentScripts.register({
@@ -127,38 +109,6 @@ function unregisterFirefoxContentScript(id: string) {
     delete contentScriptRegistrations[id];
 }
 
-//gets the sponsor times from memory
-function getSponsorTimes(videoID, callback) {
-    let sponsorTimes = [];
-    let sponsorTimesStorage = Config.config.sponsorTimes.get(videoID);
-
-    if (sponsorTimesStorage != undefined && sponsorTimesStorage.length > 0) {
-        sponsorTimes = sponsorTimesStorage;
-    }
-	
-    callback(sponsorTimes);
-}
-
-function addSponsorTime(time, videoID, callback) {
-    getSponsorTimes(videoID, function(sponsorTimes) {
-        //add to sponsorTimes
-        if (sponsorTimes.length > 0 && sponsorTimes[sponsorTimes.length - 1].length < 2) {
-            //it is an end time
-            sponsorTimes[sponsorTimes.length - 1][1] = time;
-        } else {
-            //it is a start time
-            let sponsorTimesIndex = sponsorTimes.length;
-            sponsorTimes[sponsorTimesIndex] = [];
-
-            sponsorTimes[sponsorTimesIndex][0] = time;
-        }
-
-        //save this info
-		Config.config.sponsorTimes.set(videoID, sponsorTimes);
-		callback();
-    });
-}
-
 async function submitVote(type: number, UUID: string, category: string) {
     let userID = Config.config.userID;
 
@@ -168,32 +118,35 @@ async function submitVote(type: number, UUID: string, category: string) {
         Config.config.userID = userID;
     }
 
-    let typeSection = (type !== undefined) ? "&type=" + type : "&category=" + category;
+    const typeSection = (type !== undefined) ? "&type=" + type : "&category=" + category;
 
     //publish this vote
-    let response = await asyncRequestToServer("POST", "/api/voteOnSponsorTime?UUID=" + UUID + "&userID=" + userID + typeSection);
+    const response = await asyncRequestToServer("POST", "/api/voteOnSponsorTime?UUID=" + UUID + "&userID=" + userID + typeSection);
 
     if (response.ok) {
         return {
-            successType: 1
+            successType: 1,
+            responseText: await response.text()
         };
     } else if (response.status == 405) {
         //duplicate vote
         return {
             successType: 0,
-            statusCode: response.status
+            statusCode: response.status,
+            responseText: await response.text()
         };
     } else {
         //error while connect
         return {
             successType: -1,
-            statusCode: response.status
+            statusCode: response.status,
+            responseText: await response.text()
         };
     }
 }
 
 async function asyncRequestToServer(type: string, address: string, data = {}) {
-    let serverAddress = Config.config.testingServer ? CompileConfig.testingServerAddress : Config.config.serverAddress;
+    const serverAddress = Config.config.testingServer ? CompileConfig.testingServerAddress : Config.config.serverAddress;
 
     return await (sendRequestToCustomServer(type, serverAddress + address, data));
 }
@@ -209,8 +162,8 @@ async function sendRequestToCustomServer(type: string, url: string, data = {}) {
     // If GET, convert JSON to parameters
     if (type.toLowerCase() === "get") {
         for (const key in data) {
-            let seperator = url.includes("?") ? "&" : "?";
-            let value = (typeof(data[key]) === "string") ? data[key]: JSON.stringify(data[key]);
+            const seperator = url.includes("?") ? "&" : "?";
+            const value = (typeof(data[key]) === "string") ? data[key]: JSON.stringify(data[key]);
             url += seperator + key + "=" + value;
         }
 

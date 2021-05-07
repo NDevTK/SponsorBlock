@@ -1,13 +1,15 @@
 import SubmissionNotice from "./render/SubmissionNotice";
 import SkipNoticeComponent from "./components/SkipNoticeComponent";
+import SkipNotice from "./render/SkipNotice";
 
-interface ContentContainer {
+export interface ContentContainer {
     (): {
-        vote: (type: any, UUID: any, category?: string, skipNotice?: SkipNoticeComponent) => void,
+        vote: (type: number, UUID: string, category?: string, skipNotice?: SkipNoticeComponent) => void,
         dontShowNoticeAgain: () => void,
         unskipSponsorTime: (segment: SponsorTime) => void,
         sponsorTimes: SponsorTime[],
         sponsorTimesSubmitting: SponsorTime[],
+        skipNotices: SkipNotice[],
         v: HTMLVideoElement,
         sponsorVideoID,
         reskipSponsorTime: (segment: SponsorTime) => void,
@@ -15,41 +17,41 @@ interface ContentContainer {
         onMobileYouTube: boolean,
         sponsorSubmissionNotice: SubmissionNotice,
         resetSponsorSubmissionNotice: () => void,
-        changeStartSponsorButton: (showStartSponsor: any, uploadButtonVisible: any) => Promise<boolean>,
-        previewTime: (time: number) => void,
-        videoInfo: any,
+        changeStartSponsorButton: (showStartSponsor: boolean, uploadButtonVisible: boolean) => Promise<boolean>,
+        previewTime: (time: number, unpause?: boolean) => void,
+        videoInfo: VideoInfo,
         getRealCurrentTime: () => number
     }
 }
 
-interface FetchResponse {
+export interface FetchResponse {
     responseText: string,
     status: number,
     ok: boolean
 }
 
-interface VideoDurationResponse {
+export interface VideoDurationResponse {
     duration: number;
 }
 
-enum CategorySkipOption {
+export enum CategorySkipOption {
     ShowOverlay,
     ManualSkip,
     AutoSkip
 }
 
-interface CategorySelection {
+export interface CategorySelection {
     name: string;
     option: CategorySkipOption
 }
 
-enum SponsorHideType {
+export enum SponsorHideType {
     Visible = undefined,
     Downvoted = 1,
     MinimumDuration
 }
 
-interface SponsorTime {
+export interface SponsorTime {
     segment: number[];
     UUID: string;
 
@@ -58,21 +60,104 @@ interface SponsorTime {
     hidden?: SponsorHideType;
 }
 
-interface PreviewBarOption {
+export interface PreviewBarOption {
     color: string,
     opacity: string
 }
 
-type VideoID = string;
 
-export {
-    FetchResponse,
-    VideoDurationResponse,
-    ContentContainer,
-    CategorySelection,
-    CategorySkipOption,
-    SponsorTime,
-    VideoID,
-    SponsorHideType,
-    PreviewBarOption
-};
+export interface Registration {
+    message: string,
+    id: string,
+    allFrames: boolean,
+    js: browser.extensionTypes.ExtensionFileOrCode[],
+    css: browser.extensionTypes.ExtensionFileOrCode[],
+    matches: string[]
+}
+
+export interface BackgroundScriptContainer {
+    registerFirefoxContentScript: (opts: Registration) => void,
+    unregisterFirefoxContentScript: (id: string) => void
+}
+
+export interface VideoInfo {
+    responseContext: {
+        serviceTrackingParams: Array<{service: string, params: Array<{key: string, value: string}>}>,
+        webResponseContextExtensionData: {
+            hasDecorated: boolean
+        }
+    },
+    playabilityStatus: {
+        status: string,
+        playableInEmbed: boolean,
+        miniplayer: {
+            miniplayerRenderer: {
+                playbackMode: string
+            }
+        }
+    };
+    streamingData: unknown;
+    playbackTracking: unknown;
+    videoDetails: {
+        videoId: string,
+        title: string,
+        lengthSeconds: string,
+        keywords: string[],
+        channelId: string,
+        isOwnerViewing: boolean,
+        shortDescription: string,
+        isCrawlable: boolean,
+        thumbnail: {
+            thumbnails: Array<{url: string, width: number, height: number}>
+        },
+        averageRating: number,
+        allowRatings: boolean,
+        viewCount: string,
+        author: string,
+        isPrivate: boolean,
+        isUnpluggedCorpus: boolean,
+        isLiveContent: boolean,
+    };
+    playerConfig: unknown;
+    storyboards: unknown;
+    microformat: {
+        playerMicroformatRenderer: {
+            thumbnail: {
+                thumbnails: Array<{url: string, width: number, height: number}>
+            },
+            embed: {
+                iframeUrl: string,
+                flashUrl: string,
+                width: number,
+                height: number,
+                flashSecureUrl: string,
+            },
+            title: {
+                simpleText: string,
+            },
+            description: {
+                simpleText: string,
+            },
+            lengthSeconds: string,
+            ownerProfileUrl: string,
+            externalChannelId: string,
+            availableCountries: string[],
+            isUnlisted: boolean,
+            hasYpcMetadata: boolean,
+            viewCount: string,
+            category: string,
+            publishDate: string,
+            ownerChannelName: string,
+            uploadDate: string,
+        }
+    };
+    trackingParams: string;
+    attestation: unknown;
+    messages: unknown;
+}
+
+export type VideoID = string;
+
+export type StorageChangesObject = { [key: string]: chrome.storage.StorageChange };
+
+export type UnEncodedSegmentTimes = [string, SponsorTime[]][];

@@ -8,6 +8,8 @@ export interface NoticeProps {
     timed?: boolean,
     idSuffix?: string,
 
+    videoSpeed?: () => number,
+
     fadeIn?: boolean,
 
     // Callback for when this is closed
@@ -19,7 +21,7 @@ export interface NoticeProps {
 export interface NoticeState {
     noticeTitle: string,
 
-    maxCountdownTime?: () => number,
+    maxCountdownTime: () => number,
 
     countdownTime: number,
     countdownText: string,
@@ -28,14 +30,16 @@ export interface NoticeState {
 
 class NoticeComponent extends React.Component<NoticeProps, NoticeState> {
     countdownInterval: NodeJS.Timeout;
-    idSuffix: any;
+    intervalVideoSpeed: number;
+
+    idSuffix: string;
 
     amountOfPreviousNotices: number;
 
     constructor(props: NoticeProps) {
         super(props);
 
-        let maxCountdownTime = () => {
+        const maxCountdownTime = () => {
             if (this.props.maxCountdownTime) return this.props.maxCountdownTime();
             else return 4;
         };
@@ -60,18 +64,20 @@ class NoticeComponent extends React.Component<NoticeProps, NoticeState> {
         }
     }
 
-    componentDidMount() {
+    componentDidMount(): void {
         this.startCountdown();
     }
 
-    render() {
-        let noticeStyle: React.CSSProperties = {
+    render(): React.ReactElement {
+        const noticeStyle: React.CSSProperties = {
             zIndex: this.props.zIndex || (50 + this.amountOfPreviousNotices)
         }
 
         return (
             <table id={"sponsorSkipNotice" + this.idSuffix} 
-                className={"sponsorSkipObject sponsorSkipNotice" + (this.props.fadeIn ? " sponsorSkipNoticeFadeIn" : "")}
+                className={"sponsorSkipObject sponsorSkipNotice" 
+                        + (this.props.fadeIn ? " sponsorSkipNoticeFadeIn" : "")
+                        + (this.amountOfPreviousNotices > 0 ? " secondSkipNotice" : "")}
                 style={noticeStyle}
                 onMouseEnter={() => this.timerMouseEnter()}
                 onMouseLeave={() => this.timerMouseLeave()}> 
@@ -124,19 +130,19 @@ class NoticeComponent extends React.Component<NoticeProps, NoticeState> {
         );
     }
 
-    timerMouseEnter() {
+    timerMouseEnter(): void {
         if (this.state.countdownManuallyPaused) return;
 
         this.pauseCountdown();
     }
 
-    timerMouseLeave() {
+    timerMouseLeave(): void {
         if (this.state.countdownManuallyPaused) return;
 
         this.startCountdown();
     }
 
-    toggleManualPause() {
+    toggleManualPause(): void {
         this.setState({
             countdownManuallyPaused: !this.state.countdownManuallyPaused
         }, () => {
@@ -149,10 +155,14 @@ class NoticeComponent extends React.Component<NoticeProps, NoticeState> {
     }
 
     //called every second to lower the countdown before hiding the notice
-    countdown() {
+    countdown(): void {
         if (!this.props.timed) return;
 
-        let countdownTime = this.state.countdownTime - 1;
+        const countdownTime = Math.min(this.state.countdownTime - 1, this.state.maxCountdownTime());
+
+        if (this.props.videoSpeed && this.intervalVideoSpeed != this.props.videoSpeed()) {
+            this.setupInterval();
+        }
 
         if (countdownTime <= 0) {
             //remove this from setInterval
@@ -166,7 +176,7 @@ class NoticeComponent extends React.Component<NoticeProps, NoticeState> {
 
         if (countdownTime == 3) {
             //start fade out animation
-            let notice = document.getElementById("sponsorSkipNotice" + this.idSuffix);
+            const notice = document.getElementById("sponsorSkipNotice" + this.idSuffix);
             notice.style.removeProperty("animation");
             notice.classList.add("sponsorSkipNoticeFadeOut");
         }
@@ -175,12 +185,19 @@ class NoticeComponent extends React.Component<NoticeProps, NoticeState> {
             countdownTime
         })
     }
+    
+    removeFadeAnimation(): void {
+        //remove the fade out class if it exists
+        const notice = document.getElementById("sponsorSkipNotice" + this.idSuffix);
+        notice.classList.remove("sponsorSkipNoticeFadeOut");
+        notice.style.animation = "none";
+    }
 
-    pauseCountdown() {
+    pauseCountdown(): void {
         if (!this.props.timed) return;
 
         //remove setInterval
-        clearInterval(this.countdownInterval);
+        if (this.countdownInterval) clearInterval(this.countdownInterval);
         this.countdownInterval = null;
 
         //reset countdown and inform the user
@@ -189,13 +206,10 @@ class NoticeComponent extends React.Component<NoticeProps, NoticeState> {
             countdownText: this.state.countdownManuallyPaused ? chrome.i18n.getMessage("manualPaused") : chrome.i18n.getMessage("paused")
         });
         
-        //remove the fade out class if it exists
-        let notice = document.getElementById("sponsorSkipNotice" + this.idSuffix);
-        notice.classList.remove("sponsorSkipNoticeFadeOut");
-        notice.style.animation = "none";
+        this.removeFadeAnimation();
     }
 
-    startCountdown() {
+    startCountdown(): void {
         if (!this.props.timed) return;
 
         //if it has already started, don't start it again
@@ -206,51 +220,64 @@ class NoticeComponent extends React.Component<NoticeProps, NoticeState> {
             countdownText: null
         });
 
-        this.countdownInterval = setInterval(this.countdown.bind(this), 1000);
+        this.setupInterval();
     }
 
-    resetCountdown() {
+    setupInterval(): void {
+        if (this.countdownInterval) clearInterval(this.countdownInterval);
+
+        const intervalDuration = this.props.videoSpeed ? 1000 / this.props.videoSpeed() : 1000;
+        this.countdownInterval = setInterval(this.countdown.bind(this), intervalDuration);
+
+        if (this.props.videoSpeed) this.intervalVideoSpeed = this.props.videoSpeed();
+    }
+
+    resetCountdown(): void {
         if (!this.props.timed) return;
+
+        this.setupInterval();
 
         this.setState({
             countdownTime: this.state.maxCountdownTime(),
             countdownText: null
         });
+
+        this.removeFadeAnimation();
     }
     
     /**
      * @param silent If true, the close listener will not be called
      */
-    close(silent?: boolean) {
+    close(silent?: boolean): void {
         //remove setInterval
         if (this.countdownInterval !== null) clearInterval(this.countdownInterval);
 
         if (!silent) this.props.closeListener();
     }
 
-    changeNoticeTitle(title) {
+    changeNoticeTitle(title: string): void {
         this.setState({
             noticeTitle: title
         });
     }
     
-    addNoticeInfoMessage(message: string, message2: string = "") {
+    addNoticeInfoMessage(message: string, message2 = ""): void {
         //TODO: Replace
 
-        let previousInfoMessage = document.getElementById("sponsorTimesInfoMessage" + this.idSuffix);
+        const previousInfoMessage = document.getElementById("sponsorTimesInfoMessage" + this.idSuffix);
         if (previousInfoMessage != null) {
             //remove it
             document.getElementById("sponsorSkipNotice" + this.idSuffix).removeChild(previousInfoMessage);
         }
 
-        let previousInfoMessage2 = document.getElementById("sponsorTimesInfoMessage" + this.idSuffix + "2");
+        const previousInfoMessage2 = document.getElementById("sponsorTimesInfoMessage" + this.idSuffix + "2");
         if (previousInfoMessage2 != null) {
             //remove it
             document.getElementById("sponsorSkipNotice" + this.idSuffix).removeChild(previousInfoMessage2);
         }
         
         //add info
-        let thanksForVotingText = document.createElement("p");
+        const thanksForVotingText = document.createElement("p");
         thanksForVotingText.id = "sponsorTimesInfoMessage" + this.idSuffix;
         thanksForVotingText.className = "sponsorTimesInfoMessage";
         thanksForVotingText.innerText = message;
@@ -259,7 +286,7 @@ class NoticeComponent extends React.Component<NoticeProps, NoticeState> {
         document.querySelector("#sponsorSkipNotice" + this.idSuffix + " > tbody").insertBefore(thanksForVotingText, document.getElementById("sponsorSkipNoticeSpacer" + this.idSuffix));
     
         if (message2 !== undefined) {
-            let thanksForVotingText2 = document.createElement("p");
+            const thanksForVotingText2 = document.createElement("p");
             thanksForVotingText2.id = "sponsorTimesInfoMessage" + this.idSuffix + "2";
             thanksForVotingText2.className = "sponsorTimesInfoMessage";
             thanksForVotingText2.innerText = message2;

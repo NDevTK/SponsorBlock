@@ -1,20 +1,22 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import SkipNoticeComponent from "../components/SkipNoticeComponent";
-import { SponsorTime } from "../types";
+import SkipNoticeComponent, { SkipNoticeAction } from "../components/SkipNoticeComponent";
+import { SponsorTime, ContentContainer } from "../types";
 
 class SkipNotice {
     segments: SponsorTime[];
     autoSkip: boolean;
     // Contains functions and variables from the content script needed by the skip notice
-    contentContainer: () => any;
+    contentContainer: ContentContainer;
 
     noticeElement: HTMLDivElement;
 
     skipNoticeRef: React.MutableRefObject<SkipNoticeComponent>;
 
-    constructor(segments: SponsorTime[], autoSkip: boolean = false, contentContainer) {
+    constructor(segments: SponsorTime[], autoSkip = false, contentContainer: ContentContainer) {
+        this.skipNoticeRef = React.createRef();
+
         this.segments = segments;
         this.autoSkip = autoSkip;
         this.contentContainer = contentContainer;
@@ -24,7 +26,7 @@ class SkipNotice {
                                 || document.getElementById("movie_player") || document.querySelector("#player-container .video-js");
         if (referenceNode == null) {
             //for embeds
-            let player = document.getElementById("player");
+            const player = document.getElementById("player");
             referenceNode = player.firstChild as HTMLElement;
             let index = 1;
 
@@ -35,8 +37,12 @@ class SkipNotice {
                 index++;
             }
         }
+        // YouTube Music
+        if (new URL(document.URL).host === "music.youtube.com") {
+            referenceNode = document.querySelector("#main-panel.ytmusic-player-page");
+        }
     
-        let amountOfPreviousNotices = document.getElementsByClassName("sponsorSkipNotice").length;
+        const amountOfPreviousNotices = document.getElementsByClassName("sponsorSkipNotice").length;
         //this is the suffix added at the end of every id
         let idSuffix = "";
         for (const segment of this.segments) {
@@ -59,10 +65,17 @@ class SkipNotice {
         );
     }
 
-    close() {
+    close(): void {
         ReactDOM.unmountComponentAtNode(this.noticeElement);
 
         this.noticeElement.remove();
+
+        const skipNotices = this.contentContainer().skipNotices;
+        skipNotices.splice(skipNotices.indexOf(this), 1);
+    }
+
+    toggleSkip(): void {
+        this.skipNoticeRef.current.prepAction(SkipNoticeAction.Unskip);
     }
 }
 

@@ -4,7 +4,7 @@
         "description": "Name of the extension."
     },
     "Description": {
-        "message": "Skip over sponsorship on YouTube videos. Report sponsors on videos you watch to save the time of others.",
+        "message": "Skip sponsorships, subscription begging and more on YouTube videos. Report sponsors on videos you watch to save others' time.",
         "description": "Description of the extension."
     },
     "400": {
@@ -19,17 +19,11 @@
     "channelWhitelisted": {
         "message": "Channel Whitelisted!"
     },
-    "Sponsor": {
-        "message": "sponsor"
-    },
-    "Sponsors": {
-        "message": "sponsors"
-    },
    "Segment": {
-        "message": "sponsor segment"
+        "message": "segment"
     },
     "Segments": {
-        "message": "sponsor segments"
+        "message": "segments"
     },
     "upvoteButtonInfo": {
         "message": "Upvote this submission"
@@ -45,12 +39,6 @@
     },
     "Loading": {
         "message": "Loading..."
-    },
-    "Mins": {
-        "message": "Minutes"
-    },
-    "Secs": {
-        "message": "Seconds"
     },
     "Hide": {
         "message": "Never Show"
@@ -80,19 +68,19 @@
         "message": "There was an error submitting your sponsor times, please try again later."
     },
     "sponsorFound": {
-        "message": "This video's sponsors are in the database!"
+        "message": "This video has segments in the database!"
     },
     "sponsor404": {
-        "message": "No sponsors found"
+        "message": "No segments found"
     },
     "sponsorStart": {
-        "message": "Sponsorship Starts Now"
+        "message": "Segment Starts Now"
     },
     "sponsorEnd": {
-        "message": "Sponsorship Ends Now"
+        "message": "Segment Ends Now"
     },
     "noVideoID": {
-        "message": "No YouTube video found at this tab. If you know this is a YouTube tab, close this popup and open it again. If that does not work, try reloading the tab."
+        "message": "No YouTube video found.\nIf this is incorrect, refresh the tab."
     },
     "success": {
         "message": "Success!"
@@ -107,55 +95,50 @@
         "message": "A connection error has occured. Error code: "
     },
     "wantToSubmit": {
-        "message": "Do you want to submit the sponsor times for video id"
-    },
-    "leftTimes": {
-        "message": "You seem to have left some sponsor times unsubmitted. Go back to that page to submit them (they are not deleted)."
+        "message": "Do you want to submit for video id"
     },
     "clearTimes": {
-        "message": "Clear Sponsor Times"
+        "message": "Clear Segments"
     },
     "openPopup": {
         "message": "Open SponsorBlock Popup"
     },
+    "closePopup": {
+        "message": "Close Popup"
+    },
     "SubmitTimes": {
-        "message": "Submit Sponsor Times"
+        "message": "Submit Segments"
     },
     "submitCheck": {
         "message": "Are you sure you want to submit this?"
     },
     "whitelistChannel": {
-         "message": "Whitelist Channel"
+         "message": "Whitelist channel"
     },
     "removeFromWhitelist": {
-         "message": "Remove Channel From Whitelist"
+         "message": "Remove channel from whitelist"
     },
     "voteOnTime": {
-         "message": "Vote On A Sponsor Time"
+         "message": "Vote On A Segment"
     },
-    "recordTimes": {
-         "message": "Record the times of a sponsorship"
-    },
-    "soFarUHSubmited": {
-         "message": "So far, you've submitted"
+    "Submissions": {
+         "message": "Submissions"
     },
     "savedPeopleFrom": {
-         "message": "You have saved people from "
+         "message": "You've saved people from "
     },
     "viewLeaderboard": {
-         "message": "View the leaderboard"
-    },
-    "here": {
-        "message": "here"
+         "message": "Leaderboard"
     },
     "recordTimesDescription": {
-         "message": "Click the button below when the sponsorship starts and ends to record and\nsubmit it to the database."
+         "message": "Submit"
+    },
+    "submissionEditHint": {
+        "message": "Section editing will appear after you click submit",
+        "description": "Appears in the popup to inform them that editing has been moved to the video player."
     },
     "popupHint": {
-         "message": "Hint: Press the semicolon key while focused on a video to report the start/end of a sponsor and quote to submit. (This can be changed in the options)"
-    },
-    "lastTimes": {
-         "message": "Latest Sponsor Message Times Chosen"
+         "message": "Hint: You can setup keybinds for submitting in the options"
     },
     "clearTimesButton": {
         "message": "Clear Times"
@@ -165,6 +148,9 @@
     },
     "publicStats": {
         "message": "This is used on the public stats page to show off how much you've contributed. See it"
+    },
+    "Username": {
+        "message": "Username"
     },
     "setUsername": {
         "message": "Set Username"
@@ -205,20 +191,29 @@
     "whatDeleteButton": {
         "message": "This is the button on the YouTube player that will clear all your un-submitted segments for the current video."
     },
-    "disableViewTracking": {
-        "message": "Disable Sponsor Skip Count Tracking"
-    },
     "enableViewTracking": {
-        "message": "Enable Sponsor Skip Count Tracking"
+        "message": "Enable Skip Count Tracking"
     },
     "whatViewTracking": {
-        "message": "This feature tracks which sponsors you have skipped to let users know how much their submission has helped others and\nused as a metric along with upvotes to ensure that spam doesn't get into the database. The extension sends a message\nto the server each time you skip a sponsor. Hopefully most people don't change this setting so that the view numbers are accurate. :)"
+        "message": "This feature tracks which segments you have skipped to let users know how much their submission has helped others and used as a metric along with upvotes to ensure that spam doesn't get into the database. The extension sends a message to the server each time you skip a segment. Hopefully most people don't change this setting so that the view numbers are accurate. :)"
+    },
+    "enableQueryByHashPrefix": {
+        "message": "Query By Hash Prefix"
+    },
+    "whatQueryByHashPrefix": {
+        "message": "Instead of requesting segments from the server using the videoID, the first 4 characters of the hash of the videoID are sent. This server will send back data for all videos with similar hashes."
+    },
+    "enableRefetchWhenNotFound": {
+        "message": "Refetch Segments On New Videos"
+    },
+    "whatRefetchWhenNotFound": {
+        "message": "If the video is new, and there are no segments found, it will keep refetching every few minutes while you watch."
     },
     "showNotice": {
         "message": "Show Notice Again"
     },
     "longDescription": {
-        "message": "SponsorBlock is an extension that will skip over sponsored segments of YouTube videos. SponsorBlock is a crowdsourced browser extension that lets anyone submit the start and end times of sponsored segments of YouTube videos. Once one person submits this information, everyone else with this extension will skip right over the sponsored segment.",
+        "message": "SponsorBlock lets you skip over sponsors, intros, outros, subscription reminders, and other annoying parts of YouTube videos. SponsorBlock is a crowdsourced browser extension that let's anyone submit the start and end time's of sponsored segments and other segments of YouTube videos. Once one person submits this information, everyone else with this extension will skip right over the sponsored segment. You can also skip over non music sections of music videos.",
         "description": "Full description of the extension on the store pages."
     },
     "website": {
@@ -237,8 +232,11 @@
         "message": "If you still don't like it, hit the never show button.",
         "description": "The second line of the message displayed after the notice was upgraded."
     },
+    "setSkipShortcut": {
+        "message": "Set key for skipping a segment"
+    },
     "setStartSponsorShortcut": {
-        "message": "Set key for start sponsor keybind"
+        "message": "Set key for start segment keybind"
     },
     "setSubmitKeybind": {
         "message": "Set key for submission keybind"
@@ -253,10 +251,10 @@
         "message": "Connection Timeout. Check your internet connection. If your internet is working, the server is probably overloaded or down."
     },
     "disableSkipping": {
-        "message": "Disable SponsorBlock"
+        "message": "Skipping is enabled"
     },
     "enableSkipping": {
-        "message": "Enable SponsorBlock"
+        "message": "Skipping is disabled"
     },
     "yourWork": {
         "message": "Your Work",
@@ -271,6 +269,9 @@
     "skip": {
         "message": "Skip"
     },
+    "skip_category": {
+        "message": "Skip {0}?"
+    },
     "skipped": {
         "message": "Skipped"
     },
@@ -280,17 +281,20 @@
     "enableAutoSkip": {
         "message": "Enable Auto Skip"
     },
-    "autoSkipDescription": {
-        "message": "Auto skip will skip sponsors for you. If disabled, a notice will appear asking if you'd like to skip."
-    },
     "audioNotification": {
         "message": "Audio Notification On Skip"
     },
     "audioNotificationDescription": {
-        "message": "Audio notification on skip will play a sound whenever a sponsor is skipped. If disabled (or auto skip is disabled), no sound will be played."
+        "message": "Audio notification on skip will play a sound whenever a segment is skipped. If disabled (or auto skip is disabled), no sound will be played."
+    },
+    "showTimeWithSkips": {
+        "message": "Show Time With Skips Removed"
+    },
+    "showTimeWithSkipsDescription": {
+        "message": "This time appears in brackets next to the current time on below the seekbar. This shows the total video duration minus any segments. This includes segments marked as only \"Show In Seekbar\"."
     },
     "youHaveSkipped": {
-        "message": "You have skipped "
+        "message": "You've skipped "
     },
     "youHaveSaved": {
         "message": "You have saved yourself "
@@ -308,13 +312,10 @@
         "message": "hours"
     },
     "youHaveSavedTime": {
-        "message": "You have saved people"
+        "message": "You've saved people"
     },
     "youHaveSavedTimeEnd": {
-        "message": " of their lives."
-    },
-    "guildlinesSummary": {
-        "message": "- Make sure your segment only contains paid promotion segment, nothing else.\n- Make sure skipping this segment will not skip valuable content\n- If the whole video is a sponsor, please do not report it. A full video reporting system will come out soon.\n- Please do not report disclaimers that could show bias (if a review video is sponsored, don't skip when they mention that)."
+        "message": " of their lives"
     },
     "statusReminder": {
         "message": "Check status.sponsor.ajay.app for server status."
@@ -338,7 +339,7 @@
         "message": "Auto Skip"
     },
     "showSkipNotice": {
-        "message": "Show Notice After A Sponsor Is Skipped"
+        "message": "Show Notice After A Segment Is Skipped"
     },
     "keybindCurrentlySet": {
         "message": ". It is currently set to:"
@@ -377,7 +378,7 @@
         "message": "Minimum duration (seconds):"
     },
     "minDurationDescription": {
-        "message": "Sponsor segments shorter than the set value will not be skipped or show in the player."
+        "message": "Segments shorter than the set value will not be skipped or show in the player."
      },
     "shortCheck": {
         "message": "The following submission is shorter than your minimum duration option. This could mean that this is already submitted, and just being ignored due to this option. Are you sure you would like to submit?"
@@ -401,19 +402,19 @@
         "message": "Reset"
     },
     "customAddressError": {
-        "message": "This address is not in the right form. Make sure you have http:// or https:// at the begining and no trailing slashes."
+        "message": "This address is not in the right form. Make sure you have http:// or https:// at the beginning and no trailing slashes."
     },
     "areYouSureReset": {
         "message": "Are you sure you would like to reset this?"
     },
     "confirmPrivacy": {
-        "message": "The video has been detected as unlisted. Click cancel if you do not want to check for sponsors."
+        "message": "The video has been detected as unlisted. Click cancel if you do not want to check for skip segments."
     },
     "unlistedCheck": {
         "message": "Ignore Unlisted/Private Videos"
     },
     "whatUnlistedCheck": {
-        "message": "This setting will slightly slow down SponsorBlock. Sponsor lookups require sending the video ID to the server. If you are concerned about unlisted video IDs being sent over the internet, enable this option."
+        "message": "This setting will slightly slow down SponsorBlock. Skip segment lookups require sending the video ID to the server. If you are concerned about unlisted video IDs being sent over the internet, enable this option."
     },
     "mobileUpdateInfo": {
         "message": "m.youtube.com is now supported"
@@ -448,6 +449,9 @@
     "preview": {
         "message": "Preview"
     },
+    "inspect": {
+        "message": "Inspect"
+    },
     "edit": {
         "message": "Edit"
     },
@@ -466,15 +470,12 @@
     "theKey": {
         "message": "The key"
     },
-    "keyAlreadyUsedByYouTube": {
-        "message": "is already used by youtube. Please select another key."
-    },
     "keyAlreadyUsed": {
         "message": "is bound to another action. Please select another key."
     },
     "to": {
         "message": "to",
-        "description": "Used between sponsor times. Example: 1:20 to 1:30"
+        "description": "Used between segments. Example: 1:20 to 1:30"
     },
     "category_sponsor": {
         "message": "Sponsor"
@@ -483,19 +484,19 @@
         "message": "Paid promotion, paid referrals and direct advertisements. Not for self-promotion or free shoutouts to causes/creators/websites/products they like."
     },
     "category_intro": {
-        "message": "Intro Animation"
+        "message": "Intermission/Intro Animation"
     },
     "category_intro_description": {
-        "message": "Intro animations that are recurring in the series or provide no direct value. This should not be used on music videos."
+        "message": "An interval without actual content. Could be a pause, static frame, repeating animation. This should not be used for transitions containing information."
     },
     "category_intro_short": {
-        "message": "Intro"
+        "message": "Intermission"
     },
     "category_outro": {
         "message": "Endcards/Credits"
     },
     "category_outro_description": {
-        "message": "Credits or when the YouTube endcards appear. Not for spoken conclusions. This should not include useful content. This should not be used on music videos."
+        "message": "Credits or when the YouTube endcards appear. Not for conclusions with information."
     },
     "category_interaction": {
         "message": "Interaction Reminder (Subscribe)"
@@ -516,7 +517,7 @@
         "message": "Music: Non-Music Section"
     },
     "category_music_offtopic_description": {
-        "message": "Only for use in music videos. This includes introductions or outros in music videos."
+        "message": "Only for use in music videos. This only should be used for sections of music videos that aren't already covered by another category."
     },
     "category_music_offtopic_short": {
         "message": "Non-Music"
@@ -568,6 +569,16 @@
     "moreCategories": {
         "message": "More Categories"
     },
+    "chooseACategory": {
+        "message": "Choose a Category"
+    },
+    "enableThisCategoryFirst": {
+        "message": "To submit segments with the category of \"{0}\", you must enable it in the options. You will be redirected to the options now.",
+        "description": "Used when submitting segments to only let them select a certain category if they have it enabled in the options."
+    },
+    "youMustSelectACategory": {
+        "message": "You must select a category for all segments you are submitting!"
+    },
     "bracketEnd": {
         "message": "(End)"
     },
@@ -583,17 +594,20 @@
     "adblockerIssue": {
         "message": "It seems that something is blocking SponsorBlock's ability to get video data. This is probably your ad blocker. Please check https://github.com/ajayyy/SponsorBlock/wiki/Fix-Ad-Blocker-Blocking-SponsorBlock's-Requests"
     },
+    "adblockerIssueUnlistedVideosInfo": {
+        "message": "If you are unable to resolve this, then disable the setting 'Ignore unlisted/private videos', as SponsorBlock is unable to retrieve the visibility information for this video"
+    },
     "itCouldBeAdblockerIssue": {
         "message": "If this keeps occuring, it could be caused by your ad blocker. Please check https://github.com/ajayyy/SponsorBlock/wiki/Fix-Ad-Blocker-Blocking-SponsorBlock's-Requests"
     },
     "forceChannelCheck": {
-        "message": "Force Channel Check Before Skipping Sponsors"
+        "message": "Force Channel Check Before Skipping"
     },
     "whatForceChannelCheck": {
-        "message": "By default, it will skip sponsors right away before it even knows what the channel is. By default, some zero second sponsors might be skipped on whitelisted channels. Enabling this option will prevent this but making all skipping have a slight delay as getting the channelID can take some time. This delay might be unnoticeable if you have fast internet."
+        "message": "By default, it will skip segments right away before it even knows what the channel is. By default, some segments at the start of the video might be skipped on whitelisted channels. Enabling this option will prevent this but making all skipping have a slight delay as getting the channelID can take some time. This delay might be unnoticeable if you have fast internet."
     },
     "forceChannelCheckPopup": {
-        "message": "Consider Enabling Force Channel Check Before Skipping Sponsors"
+        "message": "Consider Enabling \"Force Channel Check Before Skipping\""
     },
     "downvoteDescription": {
         "message": "Incorrect/Wrong Timing"
@@ -602,7 +616,7 @@
         "message": "Wrong Category"
     },
     "nonMusicCategoryOnMusic": {
-        "message": "This video is categorized as music. Are you sure you would like to submit segments with non-music categories? Unless this video is not actually music, you should not be submitting this segment. Please read the guidelines if you are confused."
+        "message": "This video is categorized as music. Are you sure this has a sponsor? If this is actually a \"Non-Music segment\", open up the extension options and enable this category. Then, you can submit this segment as \"Non-Music\" instead of sponsor. Please read the guidelines if you are confused."
     },
     "multipleSegments": {
         "message": "Multiple Segments"
@@ -620,10 +634,7 @@
     "categoryUpdate2": {
         "message": "Open the options to skip intros, outros, merch, etc."
     },
-    "unsubmittedWarning": {
-        "message": "Unsubmitted Segments Notification"
-    },
-    "unsubmittedWarningDescription": {
-        "message": "Send a notification when you leave a video with segments that are not uploaded"
+    "help": {
+        "message": "Help"
     }
 }

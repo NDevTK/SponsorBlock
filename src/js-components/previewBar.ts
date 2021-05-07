@@ -1,181 +1,226 @@
 /*
-	This is based on code from VideoSegments.
-	https://github.com/videosegments/videosegments/commits/f1e111bdfe231947800c6efdd51f62a4e7fef4d4/segmentsbar/segmentsbar.js
+This is based on code from VideoSegments.
+https://github.com/videosegments/videosegments/commits/f1e111bdfe231947800c6efdd51f62a4e7fef4d4/segmentsbar/segmentsbar.js
 */
 
 'use strict';
 
 import Config from "../config";
+import Utils from "../utils";
+const utils = new Utils();
+
+const TOOLTIP_VISIBLE_CLASS = 'sponsorCategoryTooltipVisible';
+
+export interface PreviewBarSegment {
+    segment: [number, number];
+    category: string;
+    preview: boolean;
+}
 
 class PreviewBar {
-	container: HTMLUListElement;
-	parent: any;
-	onMobileYouTube: boolean;
+    container: HTMLUListElement;
+    categoryTooltip?: HTMLDivElement;
+    tooltipContainer?: HTMLElement;
 
-	timestamps: number[][];
-	types: string;
+    parent: HTMLElement;
+    onMobileYouTube: boolean;
+    onInvidious: boolean;
 
-	constructor(parent, onMobileYouTube) {
-		this.container = document.createElement('ul');
-		this.container.id = 'previewbar';
-		this.parent = parent;
+    segments: PreviewBarSegment[] = [];
+    videoDuration = 0;
 
-		this.onMobileYouTube = onMobileYouTube;
+    constructor(parent: HTMLElement, onMobileYouTube: boolean, onInvidious: boolean) {
+        this.container = document.createElement('ul');
+        this.container.id = 'previewbar';
 
-		this.updatePosition(parent);
+        this.parent = parent;
+        this.onMobileYouTube = onMobileYouTube;
+        this.onInvidious = onInvidious;
 
-		this.setupHoverText();
-	}
+        this.updatePosition(parent);
 
-	setupHoverText() {
-		let seekBar = document.querySelector(".ytp-progress-bar-container");
+        this.setupHoverText();
+    }
 
-		// Create label placeholder
-		let tooltipTextWrapper = document.querySelector(".ytp-tooltip-text-wrapper");
-		let titleTooltip = document.querySelector(".ytp-tooltip-title");
-		let categoryTooltip = document.createElement("div");
-		categoryTooltip.className = "sbHidden ytp-tooltip-title";
-		categoryTooltip.id = "sponsor-block-category-tooltip"
+    setupHoverText(): void {
+        if (this.onMobileYouTube || this.onInvidious) return;
 
-		tooltipTextWrapper.insertBefore(categoryTooltip, titleTooltip.nextSibling);
+        // Create label placeholder
+        this.categoryTooltip = document.createElement("div");
+        this.categoryTooltip.className = "ytp-tooltip-title sponsorCategoryTooltip";
 
-		let mouseOnSeekBar = false;
+        const tooltipTextWrapper = document.querySelector(".ytp-tooltip-text-wrapper");
+        if (!tooltipTextWrapper || !tooltipTextWrapper.parentElement) return;
 
-		seekBar.addEventListener("mouseenter", (event) => {
-			mouseOnSeekBar = true;
-		});
+        // Grab the tooltip from the text wrapper as the tooltip doesn't have its classes on init
+        this.tooltipContainer = tooltipTextWrapper.parentElement;
+        const titleTooltip = tooltipTextWrapper.querySelector(".ytp-tooltip-title");
+        if (!this.tooltipContainer || !titleTooltip) return;
 
-		seekBar.addEventListener("mouseleave", (event) => {
-			mouseOnSeekBar = false;
-			categoryTooltip.classList.add("sbHidden");
-		});
+        tooltipTextWrapper.insertBefore(this.categoryTooltip, titleTooltip.nextSibling);
 
-		const observer = new MutationObserver((mutations, observer) => {
-			if (!mouseOnSeekBar) return;
+        const seekBar = document.querySelector(".ytp-progress-bar-container");
+        if (!seekBar) return;
 
-			// See if mutation observed is only this ID (if so, ignore)
-			if (mutations.length == 1 && (mutations[0].target as HTMLElement).id === "sponsor-block-category-tooltip") {
-				return;
-			}
+        let mouseOnSeekBar = false;
 
-			let tooltips = document.querySelectorAll(".ytp-tooltip-text");
-			for (const tooltip of tooltips) {
-				let splitData = tooltip.textContent.split(":");
-				if (splitData.length === 2 && !isNaN(parseInt(splitData[0])) && !isNaN(parseInt(splitData[1]))) {
-					// Add label
-					let timeInSeconds = parseInt(splitData[0]) * 60 + parseInt(splitData[1]);
+        seekBar.addEventListener("mouseenter", () => {
+            mouseOnSeekBar = true;
+        });
 
-					// Find category at that location
-					let category = null;
-					for (let i = 0; i < this.timestamps?.length; i++) {
-						if (this.timestamps[i][0] < timeInSeconds && this.timestamps[i][1] > timeInSeconds){
-							category = this.types[i];
-						} 
-					}
+        seekBar.addEventListener("mouseleave", () => {
+            mouseOnSeekBar = false;
+        });
 
-					if (category === null && !categoryTooltip.classList.contains("sbHidden")) {
-						categoryTooltip.classList.add("sbHidden");
-						tooltipTextWrapper.classList.remove("sbTooltipTwoTitleThumbnailOffset");
-						tooltipTextWrapper.classList.remove("sbTooltipOneTitleThumbnailOffset");
-					} else if (category !== null) {
-						categoryTooltip.classList.remove("sbHidden");
-						categoryTooltip.textContent = chrome.i18n.getMessage("category_" + category) 
-							|| (chrome.i18n.getMessage("preview") + " " + chrome.i18n.getMessage("category_" + category.split("preview-")[1]));
+        const observer = new MutationObserver((mutations) => {
+            if (!mouseOnSeekBar || !this.categoryTooltip || !this.tooltipContainer) return;
 
-						// There is a title now
-						tooltip.classList.remove("ytp-tooltip-text-no-title");
+            // If the mutation observed is only for our tooltip text, ignore
+            if (mutations.length === 1 && (mutations[0].target as HTMLElement).classList.contains("sponsorCategoryTooltip")) {
+                return;
+            }
 
-						// Add the correct offset for the number of titles there are
-						if (titleTooltip.textContent !== "") {
-							if (!tooltipTextWrapper.classList.contains("sbTooltipTwoTitleThumbnailOffset")) {
-								tooltipTextWrapper.classList.add("sbTooltipTwoTitleThumbnailOffset");
-							}
-						} else if (!tooltipTextWrapper.classList.contains("sbTooltipOneTitleThumbnailOffset")) {
-							tooltipTextWrapper.classList.add("sbTooltipOneTitleThumbnailOffset");
-						}
-					}
+            const tooltipTextElements = tooltipTextWrapper.querySelectorAll(".ytp-tooltip-text");
+            let timeInSeconds: number | null = null;
+            let noYoutubeChapters = false;
 
-					break;
-				}
-			}
-		});
+            for (const tooltipTextElement of tooltipTextElements) {
+                if (tooltipTextElement.classList.contains('ytp-tooltip-text-no-title')) noYoutubeChapters = true;
 
-		observer.observe(tooltipTextWrapper, {
-			childList: true,
-			subtree: true
-		});
-	}
+                const tooltipText = tooltipTextElement.textContent;
+                if (tooltipText === null || tooltipText.length === 0) continue;
 
-	updatePosition(parent) {
-		//below the seek bar
-		// this.parent.insertAdjacentElement("afterEnd", this.container);
+                timeInSeconds = utils.getFormattedTimeToSeconds(tooltipText);
 
-		this.parent = parent;
+                if (timeInSeconds !== null) break;
+            }
 
-		if (this.onMobileYouTube) {
-			parent.style.backgroundColor = "rgba(255, 255, 255, 0.3)";
-			parent.style.opacity = "1";
-			
-			this.container.style.transform = "none";
-		}
-		
-		//on the seek bar
-		this.parent.insertAdjacentElement("afterBegin", this.container);
-	}
+            if (timeInSeconds === null) return;
 
-	updateColor(segment, color, opacity) {
-		let bars = <NodeListOf<HTMLElement>> document.querySelectorAll('[data-vs-segment-type=' + segment + ']');
-		for (let bar of bars) {
-			bar.style.backgroundColor = color;
-			bar.style.opacity = opacity;
-		}
-	}
+            // Find the segment at that location, using the shortest if multiple found
+            let segment: PreviewBarSegment | null = null;
+            let currentSegmentLength = Infinity;
 
-	set(timestamps, types, duration) {
-		while (this.container.firstChild) {
-			this.container.removeChild(this.container.firstChild);
-		}
+            for (const seg of this.segments) {
+                if (seg.segment[0] <= timeInSeconds && seg.segment[1] > timeInSeconds) {
+                    const segmentLength = seg.segment[1] - seg.segment[0];
 
-		if (!timestamps || !types) {
-			return;
-		}
+                    if (segmentLength < currentSegmentLength) {
+                        currentSegmentLength = segmentLength;
+                        segment = seg;
+                    }
+                }
+            }
 
-		this.timestamps = timestamps;
-		this.types = types;
+            if (segment === null && this.tooltipContainer.classList.contains(TOOLTIP_VISIBLE_CLASS)) {
+                this.tooltipContainer.classList.remove(TOOLTIP_VISIBLE_CLASS);
+            } else if (segment !== null) {
+                this.tooltipContainer.classList.add(TOOLTIP_VISIBLE_CLASS);
 
-		// to avoid rounding error resulting in width more than 100% 
-		duration = Math.floor(duration * 100) / 100;
-		let width;
-		for (let i = 0; i < timestamps.length; i++) {
-			if (types[i] == null) continue;
+                if (segment.preview) {
+                    this.categoryTooltip.textContent = chrome.i18n.getMessage("preview") + " " + utils.shortCategoryName(segment.category);
+                } else {
+                    this.categoryTooltip.textContent = utils.shortCategoryName(segment.category);
+                }
 
-			width = (timestamps[i][1] - timestamps[i][0]) / duration * 100;
-			width = Math.floor(width * 100) / 100;
+                // Use the class if the timestamp text uses it to prevent overlapping
+                this.categoryTooltip.classList.toggle("ytp-tooltip-text-no-title", noYoutubeChapters);
+            }
+        });
 
-			let bar = this.createBar();
-			bar.setAttribute('data-vs-segment-type', types[i]);
+        observer.observe(tooltipTextWrapper, {
+            childList: true,
+            subtree: true,
+        });
+    }
 
-			bar.style.backgroundColor = Config.config.barTypes[types[i]].color;
-			if (!this.onMobileYouTube) bar.style.opacity = Config.config.barTypes[types[i]].opacity;
-			bar.style.width = width + '%';
-			bar.style.left = (timestamps[i][0] / duration * 100) + "%";
-			bar.style.position = "absolute"
+    updatePosition(parent: HTMLElement): void {
+        this.parent = parent;
 
-			this.container.insertAdjacentElement("beforeend", bar);
-		}
-	}
+        if (this.onMobileYouTube) {
+            parent.style.backgroundColor = "rgba(255, 255, 255, 0.3)";
+            parent.style.opacity = "1";
+            
+            this.container.style.transform = "none";
+        }
 
-	createBar() {
-		let bar = document.createElement('li');
-		bar.classList.add('previewbar');
-		bar.innerHTML = '&nbsp;';
-		return bar;
-	}
+        // On the seek bar
+        this.parent.prepend(this.container);
+    }
 
-	remove() {
-		this.container.remove();
-		this.container = undefined;
-	}
+    // TODO: call on config changes
+    updateColor(segmentType: string, color: string, opacity: number): void {
+        const bars = <NodeListOf<HTMLElement>> document.querySelectorAll('[data-vs-segment-type=' + segmentType + ']');
+
+        for (const bar of bars) {
+            bar.style.backgroundColor = color;
+            bar.style.opacity = String(opacity);
+        }
+    }
+
+    clear(): void {
+        this.videoDuration = 0;
+        this.segments = [];
+
+        while (this.container.firstChild) {
+            this.container.removeChild(this.container.firstChild);
+        }
+    }
+
+    set(segments: PreviewBarSegment[], videoDuration: number): void {
+        this.clear();
+
+        if (!segments) return;
+
+        this.segments = segments;
+        this.videoDuration = videoDuration;
+
+        this.segments.sort(({segment: a}, {segment: b}) => {
+            // Sort longer segments before short segments to make shorter segments render later
+            return (b[1] - b[0]) - (a[1] - a[0]);
+        }).forEach((segment) => {
+            const bar = this.createBar(segment);
+
+            this.container.appendChild(bar);
+        });
+    }
+
+    createBar({category, preview, segment}: PreviewBarSegment): HTMLLIElement {
+        const bar = document.createElement('li');
+        bar.classList.add('previewbar');
+        bar.innerHTML = '&nbsp;';
+
+        const barSegmentType = (preview ? 'preview-' : '') + category;
+
+        bar.setAttribute('data-vs-segment-type', barSegmentType);
+
+        bar.style.backgroundColor = Config.config.barTypes[barSegmentType].color;
+        if (!this.onMobileYouTube) bar.style.opacity = Config.config.barTypes[barSegmentType].opacity;
+
+        bar.style.position = "absolute";
+        bar.style.width = this.timeToPercentage(segment[1] - segment[0]);
+        bar.style.left = this.timeToPercentage(segment[0]);
+
+        return bar;
+    }
+
+    remove(): void {
+        this.container.remove();
+
+        if (this.categoryTooltip) {
+            this.categoryTooltip.remove();
+            this.categoryTooltip = undefined;
+        }
+
+        if (this.tooltipContainer) {
+            this.tooltipContainer.classList.remove(TOOLTIP_VISIBLE_CLASS);
+            this.tooltipContainer = undefined;
+        }
+    }
+
+    timeToPercentage(time: number): string {
+        return Math.min(100, time / this.videoDuration * 100) + '%';
+    }
 }
 
 export default PreviewBar;

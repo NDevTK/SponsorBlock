@@ -2,9 +2,6 @@ import * as React from "react";
 
 import Config from "../config"
 import { CategorySkipOption } from "../types";
-import Utils from "../utils";
-
-const utils = new Utils();
 
 export interface CategorySkipOptionsProps { 
     category: string;
@@ -29,7 +26,7 @@ class CategorySkipOptionsComponent extends React.Component<CategorySkipOptionsPr
         }
     }
 
-    render() {
+    render(): React.ReactElement {
         let defaultOption = "disable";
         // Set the default opton properly
         for (const categorySelection of Config.config.categorySelections) {
@@ -71,7 +68,7 @@ class CategorySkipOptionsComponent extends React.Component<CategorySkipOptionsPr
                     <td id={this.props.category + "ColorOption"}>
                         <input
                             className="categoryColorTextBox option-text-box"
-                            type="text"
+                            type="color"
                             onChange={(event) => this.setColorState(event, false)}
                             value={this.state.color} />
                     </td>
@@ -79,20 +76,11 @@ class CategorySkipOptionsComponent extends React.Component<CategorySkipOptionsPr
                     <td id={this.props.category + "PreviewColorOption"}>
                         <input
                             className="categoryColorTextBox option-text-box"
-                            type="text"
+                            type="color"
                             onChange={(event) => this.setColorState(event, true)}
                             value={this.state.previewColor} />
                     </td>
 
-                    <td id={this.props.category + "SaveButton"}>
-                        <div 
-                            className="option-button trigger-button"
-                            onClick={() => this.save()}>
-                            {chrome.i18n.getMessage("save")}
-                        </div>
-                    </td>
-
-                    
                 </tr>
 
                 <tr id={this.props.category + "DescriptionRow"}
@@ -154,9 +142,9 @@ class CategorySkipOptionsComponent extends React.Component<CategorySkipOptionsPr
     }
 
     getCategorySkipOptions(): JSX.Element[] {
-        let elements: JSX.Element[] = [];
+        const elements: JSX.Element[] = [];
 
-        let optionNames = ["disable", "showOverlay", "manualSkip", "autoSkip"];
+        const optionNames = ["disable", "showOverlay", "manualSkip", "autoSkip"];
 
         for (const optionName of optionNames) {
             elements.push(
@@ -169,32 +157,22 @@ class CategorySkipOptionsComponent extends React.Component<CategorySkipOptionsPr
         return elements;
     }
 
-    setColorState(event: React.ChangeEvent<HTMLInputElement>, preview: boolean) {
+    setColorState(event: React.FormEvent<HTMLInputElement>, preview: boolean): void {
         if (preview) {
             this.setState({
-                previewColor: event.target.value
+                previewColor: event.currentTarget.value
             });
+
+            Config.config.barTypes["preview-" + this.props.category].color = event.currentTarget.value;
+
         } else {
             this.setState({
-                color: event.target.value
+                color: event.currentTarget.value
             });
-        }
-    }
 
-    // Save text box data
-    save() {
-        // Validate colors
-        let checkVar = [this.state.color, this.state.previewColor]
-        for (const color of checkVar) {
-            if (color[0] !== "#" || (color.length !== 7 && color.length !== 4) || !utils.isHex(color.slice(1))) {
-                alert(chrome.i18n.getMessage("colorFormatIncorrect") + " " + color.slice(1) + " " + utils.isHex(color.slice(1)) + " " + utils.isHex("abcd123"));
-                return;
-            }
+            Config.config.barTypes[this.props.category].color = event.currentTarget.value;
         }
 
-        // Save colors
-        Config.config.barTypes[this.props.category].color = this.state.color;
-        Config.config.barTypes["preview-" + this.props.category].color = this.state.previewColor;
         // Make listener get called
         Config.config.barTypes = Config.config.barTypes;
     }

@@ -1,1 +1,136 @@
-{}
+{
+    "fullName": {
+        "message": "اسپانسربلاک برای یوتیوب - اسپانسر ها را رد کنید",
+        "description": "Name of the extension."
+    },
+    "400": {
+        "message": "سرور گفت که این درخواست نامعتبر است"
+    },
+    "409": {
+        "message": "این قبلاً ثبت شده است"
+    },
+    "channelWhitelisted": {
+        "message": "کانال در لیست سفید قرار گرفت!"
+    },
+    "Segment": {
+        "message": "بخش"
+    },
+    "Segments": {
+        "message": "بخش"
+    },
+    "upvoteButtonInfo": {
+        "message": "امتیاز دادن به این گزارش ثبت‌شده"
+    },
+    "reportButtonTitle": {
+        "message": "گزارش"
+    },
+    "Dismiss": {
+        "message": "رد کردن"
+    },
+    "Loading": {
+        "message": "درحال بارگذاری..."
+    },
+    "Hide": {
+        "message": "هرگز نمایش نده"
+    },
+    "hitGoBack": {
+        "message": "کلید عدم رد کردن را بزنید تا به جایی که بودید برگردید."
+    },
+    "unskip": {
+        "message": "عدم رد کردن"
+    },
+    "reskip": {
+        "message": "دوباره رد کردن"
+    },
+    "paused": {
+        "message": "وقفه شده"
+    },
+    "manualPaused": {
+        "message": "شمارنده متوقف شد"
+    },
+    "clearThis": {
+        "message": "مطمئن هستید که میخواهید این را حذف کنید؟\n\n"
+    },
+    "Unknown": {
+        "message": "اشکالی در ثبت کردن زمان های ارسالی شما پیش آمد. لطفا بعداً دوباره تلاش کنید."
+    },
+    "sponsor404": {
+        "message": "هیچ بخشی پیدا نشد"
+    },
+    "sponsorStart": {
+        "message": "بخش اینجا شروع می‌شود"
+    },
+    "sponsorEnd": {
+        "message": "بخش اینجا پایان می‌یابد"
+    },
+    "success": {
+        "message": "موفقیت!"
+    },
+    "voted": {
+        "message": "گزارش داده شد!"
+    },
+    "serverDown": {
+        "message": "به‌نظر می‌رسد که ارتباط سرور قطع شده است. با توسعه‌دهنده سریعاً تماس بگیرید."
+    },
+    "connectionError": {
+        "message": "خطای شبکه رخ داده است. کد خطا: "
+    },
+    "wantToSubmit": {
+        "message": "آی می‌خواهید که گزارش را ثبت کنید برای ویدیوی"
+    },
+    "clearTimes": {
+        "message": "پاک‌نمودن بخش‌ها"
+    },
+    "openPopup": {
+        "message": "نمایش پنجره اسپانسر بلاک"
+    },
+    "closePopup": {
+        "message": "بستن پنجره"
+    },
+    "SubmitTimes": {
+        "message": "ثبت بخش‌ها"
+    },
+    "submitCheck": {
+        "message": "مطمئن هستید که میخواهید این را ثبت کنید؟"
+    },
+    "voteOnTime": {
+        "message": "رأی دهی به یک بخش"
+    },
+    "clearTimesButton": {
+        "message": "حذف دفعات"
+    },
+    "submitTimesButton": {
+        "message": "ثبت دفعات"
+    },
+    "setUsername": {
+        "message": "تنظیم نام کاربری"
+    },
+    "hideThis": {
+        "message": "مخفی‌سازی"
+    },
+    "Options": {
+        "message": "گزینه‌ها"
+    },
+    "showButtons": {
+        "message": "نمایش کلید ها در پخش‌کننده یوتیوب"
+    },
+    "hideButtons": {
+        "message": "مخفی‌سازی کلید ها در پخش‌کننده یوتیوب"
+    },
+    "longDescription": {
+        "message": "افزونه اسپانسر بلاک به شما امکان رد کردن بخش‌های تبلیغاتی (اسپانسر شده)، قسمت‌های شروع و پایان ویدیو، درخواست ساب‌اسکرایب و سایر قسمت‌های آزار دهنده یوتیوب را می‌دهد. اسپانسر بلاک یک افزونه مرورگر است که به هر کسی امکان ثبت زمان شروع و پایان بخش های اسپانسر شده و سایر بخش های ویدیو های یوتیوب را می‌دهد. پس از اینکه هر کاربر این اطلاعات را ثبت کرده و گزارش دهد، بقیه کاربرانی که از این افزونه استفاده می‌کنند مستقیماً بخش اسپانسر شده ویدیو را رد خواهند کرد. شما همچنین می‌توانید در ویدیو های نماهنگ (موزیک ویدیو)، قسمت‌های غیر موسیقی ویدیو را رد کنید.",
+        "description": "Full description of the extension on the store pages."
+    },
+    "website": {
+        "message": "وب‌سایت",
+        "description": "Used on Firefox Store Page"
+    },
+    "sourceCode": {
+        "message": "سورس کد",
+        "description": "Used on Firefox Store Page"
+    },
+    "noticeUpdate2": {
+        "message": "اگر همچنان این را نمی‌پسندید، گزینه هرگز نمایش نده را انتخاب کنید.",
+        "description": "The second line of the message displayed after the notice was upgraded."
+    }
+}
