@@ -6,6 +6,7 @@ const utils = new Utils();
 
 interface SBConfig {
     userID: string,
+    /** Contains unsubmitted segments that the user has created. */
     segmentTimes: SBMap<string, SponsorTime[]>,
     defaultCategory: string,
     whitelistedChannels: string[],
@@ -34,8 +35,8 @@ interface SBConfig {
     audioNotificationOnSkip,
     checkForUnlistedVideos: boolean,
     testingServer: boolean,
-    hashPrefix: boolean,
     refetchWhenNotFound: boolean,
+    ytInfoPermissionGranted: boolean,
 
     // What categories should be skipped
     categorySelections: CategorySelection[],
@@ -167,8 +168,8 @@ const Config: SBObject = {
         audioNotificationOnSkip: false,
         checkForUnlistedVideos: false,
         testingServer: false,
-        hashPrefix: true,
         refetchWhenNotFound: true,
+        ytInfoPermissionGranted: false,
 
         categorySelections: [{
             name: "sponsor",
@@ -409,7 +410,7 @@ function migrateOldFormats(config: SBConfig) {
         // Otherwise junk data
         if (Array.isArray(jsonData)) {
             const oldMap = new Map(jsonData);
-            oldMap.forEach((sponsorTimes: number[][], key) => {
+            oldMap.forEach((sponsorTimes: [number, number][], key) => {
                 const segmentTimes: SponsorTime[] = [];
                 for (const segment of sponsorTimes) {
                     segmentTimes.push({

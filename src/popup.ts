@@ -126,8 +126,8 @@ async function runThePopup(messageListener?: MessageListener): Promise<void> {
     PageElements.optionsButton.addEventListener("click", openOptions);
     PageElements.helpButton.addEventListener("click", openHelp);
 
-    //if true, the button now selects the end time
-    let startTimeChosen = false;
+    /** If true, the content script is in the process of creating a new segment. */
+    let creatingSegment = false;
 
     //the start and end time pairs (2d)
     let sponsorTimes: SponsorTime[] = [];
@@ -233,11 +233,13 @@ async function runThePopup(messageListener?: MessageListener): Promise<void> {
 
     function onTabs(tabs) {
         messageHandler.sendMessage(tabs[0].id, {message: 'getVideoID'}, function(result) {
-            if (result != undefined && result.videoID) {
+            if (result !== undefined && result.videoID) {
                 currentVideoID = result.videoID;
+                creatingSegment = result.creatingSegment;
+
                 loadTabData(tabs);
-            } else if (result == undefined && chrome.runtime.lastError) {
-                // this isn't a YouTube video then, or at least the content script is not loaded
+            } else if (result === undefined && chrome.runtime.lastError) {
+                //this isn't a YouTube video then, or at least the content script is not loaded
                 displayNoVideo();
             }
         });
@@ -253,18 +255,10 @@ async function runThePopup(messageListener?: MessageListener): Promise<void> {
         //load video times for this video
         const sponsorTimesStorage = Config.config.segmentTimes.get(currentVideoID);
         if (sponsorTimesStorage != undefined && sponsorTimesStorage.length > 0) {
-            if (sponsorTimesStorage[sponsorTimesStorage.length - 1] != undefined && sponsorTimesStorage[sponsorTimesStorage.length - 1].segment.length < 2) {
-                startTimeChosen = true;
-                PageElements.sponsorStart.innerHTML = chrome.i18n.getMessage("sponsorEnd");
-            }
-
             sponsorTimes = sponsorTimesStorage;
-
-            //show submission section
-            PageElements.submissionSection.style.display = "unset";
-
-            showSubmitTimesIfNecessary();
         }
+
+        updateSegmentEditingUI();
 
         //check if this video's sponsors are known
         messageHandler.sendMessage(
@@ -321,51 +315,44 @@ async function runThePopup(messageListener?: MessageListener): Promise<void> {
         //the content script will get the message if a YouTube page is open
         messageHandler.query({
             active: true,
-            currentWindow: true
-        }, tabs => {
+            currentWindow: true,
+        }, (tabs) => {
             messageHandler.sendMessage(
                 tabs[0].id,
                 {from: 'popup', message: 'sponsorStart'},
-                startSponsorCallback
+                async (response) => {
+                    startSponsorCallback(response);
+
+                    // Perform a second update after the config changes take effect as a workaround for a race condition
+                    const removeListener = (listener: typeof lateUpdate) => {
+                        const index = Config.configListeners.indexOf(listener);
+                        if (index !== -1) Config.configListeners.splice(index, 1);
+                    };
+
+                    const lateUpdate = () => {
+                        startSponsorCallback(response);
+                        removeListener(lateUpdate);
+                    };
+
+                    Config.configListeners.push(lateUpdate);
+
+                    // Remove the listener after 200ms in case the changes were propagated by the time we got the response
+                    setTimeout(() => removeListener(lateUpdate), 200);
+                },
             );
         });
     }
 
-    function startSponsorCallback(response) {
-        const sponsorTimesIndex = sponsorTimes.length - (startTimeChosen ? 1 : 0);
+    function startSponsorCallback(response: {creatingSegment: boolean}) {
+        creatingSegment = response.creatingSegment;
 
-        if (sponsorTimes[sponsorTimesIndex] == undefined) {
-            sponsorTimes[sponsorTimesIndex] = {
-                segment: [],
-                category: Config.config.defaultCategory,
-                UUID: null
-            };
+        // Only update the segments after a segment was created
+        if (!creatingSegment) {
+            sponsorTimes = Config.config.segmentTimes.get(currentVideoID) || [];
         }
 
-        sponsorTimes[sponsorTimesIndex].segment[startTimeChosen ? 1 : 0] = response.time;
-
-        const localStartTimeChosen = startTimeChosen;
-        Config.config.segmentTimes.set(currentVideoID, sponsorTimes);
-
-        //send a message to the client script
-        if (localStartTimeChosen) {
-            messageHandler.query({
-                active: true,
-                currentWindow: true
-            }, tabs => {
-                messageHandler.sendMessage(
-                    tabs[0].id,
-                    {message: "sponsorDataChanged"}
-                );
-            });
-        }
-
-        updateStartTimeChosen();
-
-        //show submission section
-        PageElements.submissionSection.style.display = "unset";
-
-        showSubmitTimesIfNecessary();
+        // Update the UI
+        updateSegmentEditingUI();
     }
 
     //display the video times from the array at the top, in a different section
@@ -385,8 +372,12 @@ async function runThePopup(messageListener?: MessageListener): Promise<void> {
                 const sponsorTimeButton = document.createElement("button");
                 sponsorTimeButton.className = "segmentTimeButton popupElement";
 
-                const prefix = utils.shortCategoryName(segmentTimes[i].category) + ": ";
-
+                const categoryColorCircle = document.createElement("span");
+                categoryColorCircle.id = "sponsorTimesCategoryColorCircle" + UUID;
+                categoryColorCircle.style.backgroundColor = Config.config.barTypes[segmentTimes[i].category]?.color;
+                categoryColorCircle.classList.add("dot");
+                categoryColorCircle.classList.add("sponsorTimesCategoryColorCircle");
+                
                 let extraInfo = "";
                 if (segmentTimes[i].hidden === SponsorHideType.Downvoted) {
                     //this one is downvoted
@@ -395,14 +386,15 @@ async function runThePopup(messageListener?: MessageListener): Promise<void> {
                     //this one is too short
                     extraInfo = " (" + chrome.i18n.getMessage("hiddenDueToDuration") + ")";
                 }
+                
+                const textNode = document.createTextNode(utils.shortCategoryName(segmentTimes[i].category) + extraInfo);
+                const segmentTimeFromToNode = document.createElement("div");
+                segmentTimeFromToNode.innerText = utils.getFormattedTime(segmentTimes[i].segment[0], true) + " " + chrome.i18n.getMessage("to") + " " + utils.getFormattedTime(segmentTimes[i].segment[1], true);
+                segmentTimeFromToNode.style.margin = "5px";
 
-                sponsorTimeButton.innerText = prefix + utils.getFormattedTime(segmentTimes[i].segment[0], true) + " " + chrome.i18n.getMessage("to") + " " + utils.getFormattedTime(segmentTimes[i].segment[1], true) + extraInfo;
-
-                const categoryColorCircle = document.createElement("span");
-                categoryColorCircle.id = "sponsorTimesCategoryColorCircle" + UUID;
-                categoryColorCircle.style.backgroundColor = Config.config.barTypes[segmentTimes[i].category].color;
-                categoryColorCircle.classList.add("dot");
-                categoryColorCircle.classList.add("sponsorTimesCategoryColorCircle");
+                sponsorTimeButton.appendChild(categoryColorCircle);
+                sponsorTimeButton.appendChild(textNode);
+                sponsorTimeButton.appendChild(segmentTimeFromToNode);
 
                 const votingButtons = document.createElement("div");
                 votingButtons.classList.add("votingButtons");
@@ -411,7 +403,7 @@ async function runThePopup(messageListener?: MessageListener): Promise<void> {
                 const voteButtonsContainer = document.createElement("div");
                 voteButtonsContainer.id = "sponsorTimesVoteButtonsContainer" + UUID;
                 voteButtonsContainer.setAttribute("align", "center");
-                voteButtonsContainer.style.display = "none"
+                voteButtonsContainer.classList.add('voteButtonsContainer--hide');
 
                 const upvoteButton = document.createElement("img");
                 upvoteButton.id = "sponsorTimesUpvoteButtonsContainer" + UUID;
@@ -440,7 +432,7 @@ async function runThePopup(messageListener?: MessageListener): Promise<void> {
 
                 //add click listener to open up vote panel
                 sponsorTimeButton.addEventListener("click", function() {
-                    voteButtonsContainer.style.removeProperty("display");
+                    voteButtonsContainer.classList.toggle("voteButtonsContainer--hide");
                 });
 
                 // Will contain request status
@@ -454,7 +446,6 @@ async function runThePopup(messageListener?: MessageListener): Promise<void> {
                 thanksForVotingText.classList.add("sponsorTimesThanksForVotingText");
                 voteStatusContainer.appendChild(thanksForVotingText);
 
-                votingButtons.append(categoryColorCircle);
                 votingButtons.append(sponsorTimeButton);
                 votingButtons.append(voteButtonsContainer);
                 votingButtons.append(voteStatusContainer);
@@ -484,34 +475,13 @@ async function runThePopup(messageListener?: MessageListener): Promise<void> {
         PageElements.showNoticeAgain.style.display = "none";
     }
 
-    function updateStartTimeChosen() {
-        //update startTimeChosen letiable
-        if (!startTimeChosen) {
-            startTimeChosen = true;
-            PageElements.sponsorStart.innerHTML = chrome.i18n.getMessage("sponsorEnd");
-        } else {
-            resetStartTimeChosen();
-        }
+    /** Updates any UI related to segment editing and submission according to the current state. */
+    function updateSegmentEditingUI() {
+        PageElements.sponsorStart.innerText = chrome.i18n.getMessage(creatingSegment ? "sponsorEnd" : "sponsorStart");
+
+        PageElements.submissionSection.style.display = sponsorTimes && sponsorTimes.length > 0 ? "unset" : "none";
     }
-  
-    //set it to false
-    function resetStartTimeChosen() {
-        startTimeChosen = false;
-        PageElements.sponsorStart.innerHTML = chrome.i18n.getMessage("sponsorStart");
-    }
-  
-    //hides and shows the submit times button when needed
-    function showSubmitTimesIfNecessary() {
-        //check if an end time has been specified for the latest sponsor time
-        if (sponsorTimes.length > 0 && sponsorTimes[sponsorTimes.length - 1].segment.length > 1) {
-            //show submit times button
-            document.getElementById("submitTimesContainer").style.display = "flex";
-        } else {
-            //hide submit times button
-            document.getElementById("submitTimesContainer").style.display = "none";
-        }
-    }
-  
+
     //make the options div visible
     function openOptions() {
         chrome.runtime.sendMessage({"message": "openConfig"});
@@ -615,8 +585,7 @@ async function runThePopup(messageListener?: MessageListener): Promise<void> {
                 {message: 'getChannelID'},
                 function(response) {
                     if (!response.channelID) {
-                        alert(chrome.i18n.getMessage("channelDataNotFound") + "\n\n" + 
-                            chrome.i18n.getMessage("itCouldBeAdblockerIssue"));
+                        alert(chrome.i18n.getMessage("channelDataNotFound") + " https://github.com/ajayyy/SponsorBlock/issues/753");
                         return;
                     }
 
@@ -726,10 +695,11 @@ async function runThePopup(messageListener?: MessageListener): Promise<void> {
      * @param {float} seconds 
      * @returns {string}
      */
-    function getFormattedHours(minues) {
-        const hours = Math.floor(minues / 60);
-        return (hours > 0 ? hours + "h " : "") + (minues % 60).toFixed(1);
-    }
+	function getFormattedHours(minutes) {
+		minutes = Math.round(minutes * 10) / 10
+		const hours = Math.floor(minutes / 60);
+		return (hours > 0 ? hours + "h " : "") + (minutes % 60).toFixed(1);
+	}
   
 //end of function
 }
