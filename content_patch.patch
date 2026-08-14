@@ -1,0 +1,5 @@
+<<<<<<< SEARCH
+    const unskipTime = segment.segment[1];
+=======
+    const unskipTime = segment.segment[1];
+>>>>>>> REPLACE

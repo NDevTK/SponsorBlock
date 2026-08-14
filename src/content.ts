@@ -1275,6 +1275,15 @@ async function sponsorsLookup(keepOldSubmissions = true, ignoreCache = false) {
 }
 
 function notifyPopupOfSegments(): void {
+    // notify injected script of segments for buffer skipping
+    window.postMessage({
+        source: "sb-content",
+        type: "updateSegments",
+        segments: sponsorTimes
+            .filter((segment) => getCategorySelection(segment).option === CategorySkipOption.AutoSkip)
+            .map(s => s.segment)
+    }, "/");
+
     // notify popup of segment changes
     chrome.runtime.sendMessage({
         message: "infoUpdated",

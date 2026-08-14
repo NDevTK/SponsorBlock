@@ -1,0 +1,12 @@
+<<<<<<< SEARCH
+    window.addEventListener("message", windowMessageListener);
+=======
+    window.addEventListener("message", windowMessageListener);
+
+    // Also listen for sponsor segments update from content script
+    window.addEventListener("message", (msg) => {
+        if (msg.data?.source === id && msg.data?.type === "updateSegments") {
+            (window as any)["sb_segments"] = msg.data.segments;
+        }
+    });
+>>>>>>> REPLACE
